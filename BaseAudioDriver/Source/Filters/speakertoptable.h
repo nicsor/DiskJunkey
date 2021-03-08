@@ -14,6 +14,14 @@ Abstract:
 #ifndef _BASEAUDIODRIVER_SPEAKERTOPTABLE_H_
 #define _BASEAUDIODRIVER_SPEAKERTOPTABLE_H_
 
+
+
+
+//
+// a80c41f1-14ea-4531-9bcc-0906e0d12b72
+DEFINE_GUID(SPEAKER_CUSTOM_NAME,
+    0xa80c41f1, 0x14ea, 0x4531, 0x9b, 0xcc, 0x09, 0x06, 0xe0, 0xd1, 0x2b, 0x72);
+
 //=============================================================================
 static
 KSDATARANGE SpeakerTopoPinDataRangesBridge[] =
@@ -76,7 +84,7 @@ PCPIN_DESCRIPTOR SpeakerTopoMiniportPins[] =
       KSPIN_DATAFLOW_OUT,                               // DataFlow
       KSPIN_COMMUNICATION_NONE,                         // Communication
       &KSNODETYPE_SPEAKER,                              // Category
-      NULL,                                             // Name
+      &SPEAKER_CUSTOM_NAME,                             // Name
       0                                                 // Reserved
     }
   }

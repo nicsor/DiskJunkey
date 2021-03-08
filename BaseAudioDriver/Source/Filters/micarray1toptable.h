@@ -16,9 +16,11 @@ Abstract:
 #define _BASEAUDIODRIVER_MICARRAY1TOPTABLE_H_
 
 //
-// {6ae81ff4-203e-4fe1-88aa-f2d57775cd4a}
+// d48deb08 - fd1c - 4d1e - b821 - 9064d49ae96e
 DEFINE_GUID(MICARRAY1_CUSTOM_NAME,
-    0x6ae81ff4, 0x203e, 0x4fe1, 0x88, 0xaa, 0xf2, 0xd5, 0x77, 0x75, 0xcd, 0x4a);
+    0xd48deb08, 0xfd1c, 0x4d1e, 0xb8, 0x21, 0x90, 0x64, 0xd4, 0x9a, 0xe9, 0x6e);
+
+
 
 //=============================================================================
 static
