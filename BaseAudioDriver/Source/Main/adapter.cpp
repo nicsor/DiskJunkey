@@ -27,6 +27,22 @@ typedef void (*fnPcDriverUnload) (PDRIVER_OBJECT);
 fnPcDriverUnload gPCDriverUnloadRoutine = NULL;
 extern "C" DRIVER_UNLOAD DriverUnload;
 
+
+PDRIVER_DISPATCH DefaultMajorFunctions[IRP_MJ_MAXIMUM_FUNCTION + 1];
+
+//
+// Device type           -- in the "User Defined" range."
+//
+#define FILEIO_TYPE 40001
+//
+// The IOCTL function codes from 0x800 to 0xFFF are for customer use.
+//
+#define IOCTL_NONPNP_METHOD_IN_DIRECT \
+    CTL_CODE( FILEIO_TYPE, 0x900, METHOD_IN_DIRECT, FILE_ANY_ACCESS  )
+
+#define IOCTL_NONPNP_METHOD_OUT_DIRECT \
+    CTL_CODE( FILEIO_TYPE, 0x901, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
+
 //-----------------------------------------------------------------------------
 // Referenced forward.
 //-----------------------------------------------------------------------------
@@ -248,6 +264,78 @@ Returns:
     return STATUS_SUCCESS;
 }
 
+#pragma code_seg("PAGE")
+NTSTATUS
+BADCustomDispatch(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp
+) {
+    NTSTATUS Status;
+
+    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+    if (IrpSp->MajorFunction == IRP_MJ_DEVICE_CONTROL) {
+        ULONG &inBufLength = IrpSp->Parameters.DeviceIoControl.InputBufferLength; // Input buffer length
+        ULONG &outBufLength = IrpSp->Parameters.DeviceIoControl.OutputBufferLength; // Output buffer length
+        static char prev_buffer[256] = { 0 };
+        static int prev_length = 0;
+
+        // TODO: fix failure checks
+
+        ULONG IoControlCode = IrpSp->Parameters.DeviceIoControl.IoControlCode;
+
+        if (IoControlCode == IOCTL_NONPNP_METHOD_IN_DIRECT) {
+            KdPrint(("IOCTL_NONPNP_METHOD_IN_DIRECT\n"));
+
+            if (!inBufLength || !outBufLength)
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            PCHAR inBuf = (PCHAR)Irp->AssociatedIrp.SystemBuffer;
+            prev_length = inBufLength;
+
+            // Copy data from the application and buffer it
+            RtlCopyBytes(prev_buffer, inBuf, inBufLength);
+
+            IoCompleteRequest(Irp, STATUS_SUCCESS);
+            return 0;
+        }
+        else if (IoControlCode == IOCTL_NONPNP_METHOD_OUT_DIRECT)
+        {
+            KdPrint(("IOCTL_NONPNP_METHOD_OUT_DIRECT\n"));
+
+            if (!inBufLength || !outBufLength)
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            // Map the output buffer
+            PCHAR outBuf = (PCHAR)MmGetSystemAddressForMdlSafe(Irp->MdlAddress, HighPagePriority);
+
+            if (outBuf == NULL)
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            // Copy buffered data back to the application
+            RtlCopyMemory(outBuf, prev_buffer, prev_length);
+            Irp->IoStatus.Information = prev_length;
+
+            IoCompleteRequest(Irp, STATUS_SUCCESS);
+
+            return 0;
+        }
+    }
+
+    Status = DefaultMajorFunctions[IrpSp->MajorFunction](DeviceObject, Irp);
+
+    return Status;
+}
+
 #pragma code_seg("INIT")
 extern "C" DRIVER_INITIALIZE DriverEntry;
 extern "C" NTSTATUS
@@ -338,6 +426,19 @@ Return Value:
     // To intercept stop/remove/surprise-remove.
     //
     DriverObject->MajorFunction[IRP_MJ_PNP] = PnpHandler;
+
+    // Keep a list major functions
+    memcpy(DefaultMajorFunctions, DriverObject->MajorFunction, sizeof(DriverObject->MajorFunction[0]) * (IRP_MJ_MAXIMUM_FUNCTION + 1));
+
+    //
+    // Intercept major functions before passing the handlers to the WDM implementation
+    //
+    // DriverObject->MajorFunction[IRP_MJ_CREATE] =
+    // DriverObject->MajorFunction[IRP_MJ_CLOSE] =
+    // DriverObject->MajorFunction[IRP_MJ_READ] =
+    // DriverObject->MajorFunction[IRP_MJ_WRITE] =
+    // DriverObject->MajorFunction[IRP_MJ_CLEANUP] =
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = (PDRIVER_DISPATCH)BADCustomDispatch;
 
     //
     // Hook the port class unload function
