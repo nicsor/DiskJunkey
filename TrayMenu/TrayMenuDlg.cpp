@@ -20,6 +20,13 @@ static char THIS_FILE[] = __FILE__;
 
 #define UM_TRAYNOTIFY	(WM_USER + 1)
 
+#define INITGUID
+#include <guiddef.h>
+
+DEFINE_GUID(MICARRAY1_CUSTOM_NAME,
+	0x6994AD04, 0x93EF, 0x11D0, 0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96);
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CTrayMenuDlg dialog
 
@@ -33,6 +40,8 @@ CTrayMenuDlg::CTrayMenuDlg(CWnd* pParent /*=NULL*/)
 	memset(&m_nid, 0 , sizeof(m_nid));
 	m_nid.cbSize = sizeof(m_nid);
 	m_nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
+	
+	m_driver = new Driver((LPGUID)&MICARRAY1_CUSTOM_NAME);
 }
 
 CTrayMenuDlg::~CTrayMenuDlg ()
@@ -206,12 +215,23 @@ void CTrayMenuDlg::OnAppOpen()
 
 void CTrayMenuDlg::OnItem1() 
 {
-	::MessageBox (NULL, _T("Item 1"), _T("TrayMenu"), MB_OK);
+	char message[256];
+	char* buffer = "Ana are mere";
+	bool status = m_driver->send_data(buffer, sizeof(buffer));
+
+
+	snprintf(message, sizeof(message), "Sent: [%s] [%d]", buffer, status);
+	::MessageBox (NULL, message, _T("Send"), MB_OK);
 }
 
 void CTrayMenuDlg::OnItem2() 
 {
-	::MessageBox (NULL, _T("Item 2"), _T("TrayMenu"), MB_OK);
+	char message[256];
+	char buffer[256];
+	int len = m_driver->retrieve_data(buffer, sizeof(buffer));
+
+	snprintf(message, sizeof(message), "Retrieved: [%s] [%d]", buffer, len);
+	::MessageBox (NULL, message, _T("Retrieve"), MB_OK);
 }
 
 void CTrayMenuDlg::OnItem3() 

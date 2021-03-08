@@ -1,6 +1,8 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 11.00
-# Visual Studio 10
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.31025.194
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TrayMenu", "TrayMenu.vcxproj", "{34545473-46B9-42A8-A54E-575BED25C115}"
 EndProject
 Global
@@ -29,16 +31,16 @@ Global
 		{34545473-46B9-42A8-A54E-575BED25C115}.Debug Static|x64.Build.0 = Debug Static|X64
 		{34545473-46B9-42A8-A54E-575BED25C115}.Debug|Win32.ActiveCfg = Debug|Win32
 		{34545473-46B9-42A8-A54E-575BED25C115}.Debug|Win32.Build.0 = Debug|Win32
-		{34545473-46B9-42A8-A54E-575BED25C115}.Debug|x64.ActiveCfg = Debug|X64
-		{34545473-46B9-42A8-A54E-575BED25C115}.Debug|x64.Build.0 = Debug|X64
+		{34545473-46B9-42A8-A54E-575BED25C115}.Debug|x64.ActiveCfg = Debug|Win32
+		{34545473-46B9-42A8-A54E-575BED25C115}.Debug|x64.Build.0 = Debug|Win32
 		{34545473-46B9-42A8-A54E-575BED25C115}.Release Static|Win32.ActiveCfg = Release Static|Win32
 		{34545473-46B9-42A8-A54E-575BED25C115}.Release Static|Win32.Build.0 = Release Static|Win32
 		{34545473-46B9-42A8-A54E-575BED25C115}.Release Static|x64.ActiveCfg = Release Static|X64
 		{34545473-46B9-42A8-A54E-575BED25C115}.Release Static|x64.Build.0 = Release Static|X64
 		{34545473-46B9-42A8-A54E-575BED25C115}.Release|Win32.ActiveCfg = Release|Win32
 		{34545473-46B9-42A8-A54E-575BED25C115}.Release|Win32.Build.0 = Release|Win32
-		{34545473-46B9-42A8-A54E-575BED25C115}.Release|x64.ActiveCfg = Release|X64
-		{34545473-46B9-42A8-A54E-575BED25C115}.Release|x64.Build.0 = Release|X64
+		{34545473-46B9-42A8-A54E-575BED25C115}.Release|x64.ActiveCfg = Release|Win32
+		{34545473-46B9-42A8-A54E-575BED25C115}.Release|x64.Build.0 = Release|Win32
 		{34545473-46B9-42A8-A54E-575BED25C115}.Unicode Debug Static|Win32.ActiveCfg = Unicode Debug Static|Win32
 		{34545473-46B9-42A8-A54E-575BED25C115}.Unicode Debug Static|Win32.Build.0 = Unicode Debug Static|Win32
 		{34545473-46B9-42A8-A54E-575BED25C115}.Unicode Debug Static|x64.ActiveCfg = Unicode Debug Static|X64
@@ -58,5 +60,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {85C1289F-A17D-4962-81DB-84D932FAA4F5}
 	EndGlobalSection
 EndGlobal

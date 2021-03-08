@@ -10,6 +10,8 @@
 
 #pragma once
 
+#include "Driver.h"
+
 /////////////////////////////////////////////////////////////////////////////
 // CTrayMenuDlg dialog
 
@@ -31,6 +33,8 @@ public:
 // Implementation
 protected:
 	HICON m_hIcon;
+
+	Driver * m_driver;
 
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
