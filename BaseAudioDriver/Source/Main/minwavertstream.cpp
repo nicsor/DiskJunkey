@@ -263,6 +263,12 @@ Return Value:
     m_bCapture = Capture_;
     m_ulDmaMovementRate = pWfEx->nAvgBytesPerSec;
 
+    if (!m_bCapture)
+    {
+        g_SpeakerBuffer = m_pDmaBuffer;
+        g_SpeakerBufferSize = m_ulDmaBufferSize;
+    }
+
     m_pDpc = (PRKDPC)ExAllocatePool2(POOL_FLAG_NON_PAGED, sizeof(KDPC), MINWAVERTSTREAM_POOLTAG);
     if (!m_pDpc)
     {
@@ -350,19 +356,27 @@ Return Value:
     }
     else if (!g_DoNotCreateDataFiles)
     {
-        //
-        // Create an output file for the render data.
-        //
-        DPF(D_TERSE, ("SaveData %p", &m_SaveData));
-        ntStatus = m_SaveData.SetDataFormat(DataFormat_);
-        if (NT_SUCCESS(ntStatus))
+        // TODO: maybe we should copy it instead ....
+        PWAVEFORMATEX pwfx = NULL;
+
+        if (IsEqualGUIDAligned(DataFormat_->Specifier,
+            KSDATAFORMAT_SPECIFIER_DSOUND))
         {
-            ntStatus = m_SaveData.Initialize();
+            pwfx =
+                &(((PKSDATAFORMAT_DSOUND)DataFormat_)->BufferDesc.WaveFormatEx);
         }
-    
-        if (!NT_SUCCESS(ntStatus))
+        else if (IsEqualGUIDAligned(DataFormat_->Specifier,
+            KSDATAFORMAT_SPECIFIER_WAVEFORMATEX))
         {
-            return ntStatus;
+            pwfx = &((PKSDATAFORMAT_WAVEFORMATEX)DataFormat_)->WaveFormatEx;
+        }
+
+        if (pwfx) {
+            RtlCopyMemory(&g_SpeakerWaveFormat,
+                pwfx,
+                (pwfx->wFormatTag == WAVE_FORMAT_PCM) ?
+                sizeof(PCMWAVEFORMAT) :
+                sizeof(WAVEFORMATEX) + pwfx->cbSize);
         }
     }
 
@@ -464,6 +478,9 @@ NTSTATUS CMiniportWaveRTStream::AllocateBufferWithNotification
 
     ULONG ulBufferDurationMs = 0;
 
+    // Increase it slightly
+    // RequestedSize_ = max(RequestedSize_, DMA_BUFFER_SIZE);
+
     if ( (0 == RequestedSize_) || (RequestedSize_ < m_pWfExt->Format.nBlockAlign) )
     { 
         return STATUS_UNSUCCESSFUL; 
@@ -475,19 +492,6 @@ NTSTATUS CMiniportWaveRTStream::AllocateBufferWithNotification
     }
 
     RequestedSize_ -= RequestedSize_ % (m_pWfExt->Format.nBlockAlign);
-    
-    if (!m_bCapture && (!g_DoNotCreateDataFiles))
-    {
-        NTSTATUS ntStatus;
-        
-        // Base Audio Driver uses following buffer to hold data before writing to a file.
-        // Allocating larger buffer will reduce File I/O operations.
-        ntStatus = m_SaveData.SetMaxWriteSize(RequestedSize_ * 4);
-        if (!NT_SUCCESS(ntStatus))
-        {
-            return ntStatus;
-        }
-    }
 
     PHYSICAL_ADDRESS highAddress;
     highAddress.HighPart = 0;
@@ -518,6 +522,13 @@ NTSTATUS CMiniportWaveRTStream::AllocateBufferWithNotification
     m_pDmaBuffer = (BYTE*)m_pPortStream->MapAllocatedPages(pBufferMdl, MmCached);
     m_ulNotificationsPerBuffer = NotificationCount_;
     m_ulDmaBufferSize = RequestedSize_;
+
+    if (!m_bCapture)
+    {
+        g_SpeakerBuffer = m_pDmaBuffer;
+        g_SpeakerBufferSize = RequestedSize_;
+    }
+
     ulBufferDurationMs = (RequestedSize_ * 1000) / m_ulDmaMovementRate;
     m_ulNotificationIntervalMs = ulBufferDurationMs / NotificationCount_;
 
@@ -540,6 +551,12 @@ VOID CMiniportWaveRTStream::FreeBufferWithNotification
     UNREFERENCED_PARAMETER(Size_);
 
     PAGED_CODE();
+
+    if (!m_bCapture)
+    {
+        g_SpeakerBuffer = NULL;
+        g_SpeakerBufferSize = 0;
+    }
 
     if (Mdl_ != NULL)
     {
@@ -690,6 +707,12 @@ _In_        ULONG       Size_
 
     PAGED_CODE();
 
+    if (!m_bCapture)
+    {
+        g_SpeakerBuffer = NULL;
+        g_SpeakerBufferSize = 0;
+    }
+
     if (Mdl_ != NULL)
     {
         if (m_pDmaBuffer != NULL)
@@ -717,6 +740,9 @@ _Out_   MEMORY_CACHING_TYPE    *CacheType_
 )
 {
     PAGED_CODE();
+
+    // Increase it slightly
+    // RequestedSize_ = max(RequestedSize_, DMA_BUFFER_SIZE);
 
     if ((0 == RequestedSize_) || (RequestedSize_ < m_pWfExt->Format.nBlockAlign))
     {
@@ -754,6 +780,13 @@ _Out_   MEMORY_CACHING_TYPE    *CacheType_
     m_pDmaBuffer = (BYTE*)m_pPortStream->MapAllocatedPages(pBufferMdl, MmCached);
 
     m_ulDmaBufferSize = RequestedSize_;
+
+    if (!m_bCapture)
+    {
+        g_SpeakerBuffer = m_pDmaBuffer;
+        g_SpeakerBufferSize = RequestedSize_;
+    }
+
     m_ulNotificationsPerBuffer = 0;
 
     *AudioBufferMdl_ = pBufferMdl;
@@ -1190,12 +1223,6 @@ NTSTATUS CMiniportWaveRTStream::SetState
             m_bLastBufferRendered = FALSE;
 
             KeReleaseSpinLock(&m_PositionSpinLock, oldIrql);
-
-            // Wait until all work items are completed.
-            if (!m_bCapture && !g_DoNotCreateDataFiles)
-            {
-                m_SaveData.WaitAllWorkItems();
-            }
             break;
 
         case KSSTATE_ACQUIRE:
@@ -1356,12 +1383,6 @@ VOID CMiniportWaveRTStream::UpdatePosition
         {
             m_bLastBufferRendered = TRUE;
         }
-
-        if (!g_DoNotCreateDataFiles)
-        {
-            // Read from buffer and write to a file.
-            ReadBytes(ByteDisplacement);
-        }
     }
     
     // Increment the DMA position by the number of bytes displaced since the last
@@ -1374,6 +1395,11 @@ VOID CMiniportWaveRTStream::UpdatePosition
     // so m_ullLinearPosition needs to be updated accordingly here
     //
     m_ullLinearPosition += ByteDisplacement;
+
+    if (!m_bCapture)
+    {
+        g_SpeakerCurrentPosition = m_ullLinearPosition;
+    }
     
     // Update the DMA time stamp for the next call to GetPosition()
     //
@@ -1414,37 +1440,6 @@ ByteDisplacement - # of bytes to process.
 }
 
 //=============================================================================
-#pragma code_seg()
-VOID CMiniportWaveRTStream::ReadBytes
-(
-    _In_ ULONG ByteDisplacement
-)
-/*++
-
-Routine Description:
-
-This function reads the audio buffer and saves the data in a file.
-
-Arguments:
-
-ByteDisplacement - # of bytes to process.
-
---*/
-{
-    ULONG bufferOffset = m_ullLinearPosition % m_ulDmaBufferSize;
-
-    // Normally this will loop no more than once for a single wrap, but if
-    // many bytes have been displaced then this may loops many times.
-    while (ByteDisplacement > 0)
-    {
-        ULONG runWrite = min(ByteDisplacement, m_ulDmaBufferSize - bufferOffset);
-        m_SaveData.WriteData(m_pDmaBuffer + bufferOffset, runWrite);
-        bufferOffset = (bufferOffset + runWrite) % m_ulDmaBufferSize;
-        ByteDisplacement -= runWrite;
-    }
-}
-
-//=============================================================================
 #pragma code_seg("PAGE")
 STDMETHODIMP_(NTSTATUS) 
 CMiniportWaveRTStream::SetContentId
@@ -1472,6 +1467,8 @@ Return Value:
 {
     PAGED_CODE();
 
+    (void)drmRights;
+
     DPF_ENTER(("[CMiniportWaveRT::SetContentId]"));
 
     NTSTATUS    ntStatus;
@@ -1491,12 +1488,6 @@ Return Value:
     {
         m_ulContentId = ulOldContentId;
     }
-
-    //
-    // Base Audio Driver writes each stream seperately to disk. If the rights for this
-    // stream indicates that the stream is CopyProtected, stop writing to disk.
-    //
-    m_SaveData.Disable(drmRights->CopyProtect);
 
     //
     // From MSDN:

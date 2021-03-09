@@ -12,6 +12,9 @@
 #include "TrayMenu.h"
 #include "TrayMenuDlg.h"
 
+#include <chrono>
+#include <functional>
+
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
@@ -42,10 +45,16 @@ CTrayMenuDlg::CTrayMenuDlg(CWnd* pParent /*=NULL*/)
 	m_nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
 	
 	m_driver = new Driver((LPGUID)&MICARRAY1_CUSTOM_NAME);
+	m_stop = True;
 }
 
 CTrayMenuDlg::~CTrayMenuDlg ()
 {
+	m_stop = True;
+	if (m_thread.joinable()) {
+		m_thread.join();
+	}
+
 	m_nid.hIcon = NULL;
 	Shell_NotifyIcon (NIM_DELETE, &m_nid);
 }
@@ -217,12 +226,12 @@ void CTrayMenuDlg::OnItem1()
 {
 	char message[256];
 	char* buffer = "Ana are mere";
-	bool status = m_driver->send_data(buffer, sizeof(buffer));
+	bool status = m_driver->send_data(buffer, strlen(buffer));
 
-
-	snprintf(message, sizeof(message), "Sent: [%s] [%d]", buffer, status);
+	snprintf(message, sizeof(message), "Sent: [%s] [%d] status:[%d]", buffer, strlen(buffer), status);
 	::MessageBox (NULL, message, _T("Send"), MB_OK);
 }
+
 
 void CTrayMenuDlg::OnItem2() 
 {
@@ -234,9 +243,43 @@ void CTrayMenuDlg::OnItem2()
 	::MessageBox (NULL, message, _T("Retrieve"), MB_OK);
 }
 
+void CTrayMenuDlg::capture_audio()
+{
+	char dataBuffer[4 * 1024]; // TODO: must love them magic numbers
+	BYTE waveFormat[128];  // WAVEFORMATEX*
+
+	if (m_driver->retrieve_speaker_format((WAVEFORMATEX*)waveFormat) > 0) {
+	}
+
+	DataFile file("fisier.wav", (WAVEFORMATEX*)waveFormat);
+
+	while(!m_stop) {
+		int dataRead = m_driver->retrieve_speaker_data(dataBuffer, sizeof(dataBuffer));
+		if (dataRead) {
+			file.write_data(dataBuffer, dataRead);
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	}
+}
+
 void CTrayMenuDlg::OnItem3() 
 {
-	::MessageBox (NULL, _T("Item 3"), _T("TrayMenu"), MB_OK);
+	if (m_stop) {
+		m_stop = false;
+		m_thread = std::thread(std::bind(&CTrayMenuDlg::capture_audio, this));
+
+		::MessageBox(NULL, _T("Listening thread started"), _T("TrayMenu"), MB_OK);
+	}
+	else {
+		m_stop = true;
+
+		if (m_thread.joinable()) {
+			m_thread.join();
+		}
+
+		::MessageBox(NULL, _T("Listening thread stopped"), _T("TrayMenu"), MB_OK);
+	}
+
 }
 
 static BOOL bIsItem4Checked = TRUE;

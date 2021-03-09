@@ -43,6 +43,12 @@ PDRIVER_DISPATCH DefaultMajorFunctions[IRP_MJ_MAXIMUM_FUNCTION + 1];
 #define IOCTL_NONPNP_METHOD_OUT_DIRECT \
     CTL_CODE( FILEIO_TYPE, 0x901, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
 
+#define IOCTL_READ_SPEAKER_FORMAT \
+    CTL_CODE( FILEIO_TYPE, 0x902, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
+
+#define IOCTL_READ_SPEAKER_BUFFER \
+    CTL_CODE( FILEIO_TYPE, 0x903, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
+
 //-----------------------------------------------------------------------------
 // Referenced forward.
 //-----------------------------------------------------------------------------
@@ -67,6 +73,14 @@ DRIVER_DISPATCH PnpHandler;
 DWORD g_DoNotCreateDataFiles = 0;  // default is off.
 DWORD g_DisableToneGenerator = 0;  // default is to generate tones.
 UNICODE_STRING g_RegistryPath;      // This is used to store the registry settings path for the driver
+
+ULONGLONG  g_SpeakerCurrentPosition  = 0; // m_ullLinearPosition
+ULONGLONG  g_SpeakerLastReadPosition = 0;
+BYTE*      g_SpeakerBuffer           = 0;
+ULONG      g_SpeakerBufferSize       = 0;
+
+// TODO: use WAVEFORMATEX * and allocate it dynamically? seems stupid, but I'm lazy :)
+BYTE g_SpeakerWaveFormat[128];
 
 //-----------------------------------------------------------------------------
 // Functions
@@ -324,6 +338,94 @@ BADCustomDispatch(
             // Copy buffered data back to the application
             RtlCopyMemory(outBuf, prev_buffer, prev_length);
             Irp->IoStatus.Information = prev_length;
+
+            IoCompleteRequest(Irp, STATUS_SUCCESS);
+
+            return 0;
+        }
+        else if (IoControlCode == IOCTL_READ_SPEAKER_BUFFER) {
+            KdPrint(("IOCTL_READ_SPEAKER_BUFFER\n"));
+
+            if (!inBufLength || !outBufLength)
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            // TODO: wonder if mapping a whole memory region between the two and avoid pooling would be better.
+            // Map the output buffer
+            PCHAR outBuf = (PCHAR)MmGetSystemAddressForMdlSafe(Irp->MdlAddress, HighPagePriority);
+
+            if (outBuf == NULL)
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            // Copy buffered data back to the application
+            if (g_SpeakerBufferSize>0 && g_SpeakerBuffer != NULL)
+            {
+                ULONG maxSizeToFetch = min(outBufLength, g_SpeakerBufferSize);
+
+                // TODO: better treatment
+                ULONG availableData = (ULONG)(g_SpeakerCurrentPosition - g_SpeakerLastReadPosition);
+                DPF(D_ERROR, ("IOCTL_READ_SPEAKER_BUFFER current: %d , %d , %d , %d", (ULONG)g_SpeakerCurrentPosition, (ULONG)g_SpeakerLastReadPosition, availableData, maxSizeToFetch))
+
+                if (availableData > 0) {
+                    if (availableData > maxSizeToFetch) {
+                        // TODO: In practice we should drop a bit more than this, unless we copy to a separate buffer.
+                        // or make so that we send only the last N ms.
+                        g_SpeakerLastReadPosition += availableData - maxSizeToFetch;
+                        availableData = maxSizeToFetch;
+                    }
+
+                    ULONG bufferOffset = g_SpeakerLastReadPosition % g_SpeakerBufferSize;
+                    g_SpeakerLastReadPosition += maxSizeToFetch;
+
+
+                    ULONG writeSize = min(availableData, g_SpeakerBufferSize - bufferOffset);
+                    RtlCopyMemory(outBuf, g_SpeakerBuffer + bufferOffset, writeSize);
+
+                    // wrap around
+                    if (availableData != writeSize)
+                    {
+                        RtlCopyMemory(outBuf + writeSize, g_SpeakerBuffer, availableData - writeSize);
+                    }
+                }
+                else {
+                    // TODO: Don't think this will occur, but just in case.
+                    availableData = 0;
+                }
+
+                Irp->IoStatus.Information = availableData;
+            }
+
+            IoCompleteRequest(Irp, STATUS_SUCCESS);
+
+            return 0;
+        }
+        else if (IoControlCode == IOCTL_READ_SPEAKER_FORMAT){
+            KdPrint(("IOCTL_READ_SPEAKER_FORMAT\n"));
+
+            if (!inBufLength || !outBufLength)
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            // Map the output buffer
+            PCHAR outBuf = (PCHAR)MmGetSystemAddressForMdlSafe(Irp->MdlAddress, HighPagePriority);
+
+            if (outBuf == NULL)
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            // TODO: At one point I should check if this is valid.
+            // also should check actual size: (pwfx->wFormatTag == WAVE_FORMAT_PCM) ? sizeof(PCMWAVEFORMAT) : sizeof(WAVEFORMATEX) + pwfx->cbSize)
+            RtlCopyMemory(outBuf, &g_SpeakerWaveFormat, sizeof(g_SpeakerWaveFormat));
+            Irp->IoStatus.Information = sizeof(g_SpeakerWaveFormat);
 
             IoCompleteRequest(Irp, STATUS_SUCCESS);
 

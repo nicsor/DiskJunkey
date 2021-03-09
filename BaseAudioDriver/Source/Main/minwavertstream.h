@@ -14,7 +14,6 @@ Abstract:
 #ifndef _BASEAUDIODRIVER_MINWAVERTSTREAM_H_
 #define _BASEAUDIODRIVER_MINWAVERTSTREAM_H_
 
-#include "savedata.h"
 #include "ToneGenerator.h"
 
 //
@@ -111,7 +110,6 @@ protected:
     PLONG                       m_plPeakMeter;
     PWAVEFORMATEXTENSIBLE       m_pWfExt;
     ULONG                       m_ulContentId;
-    CSaveData                   m_SaveData;
     ToneGenerator               m_ToneGenerator;
     GUID                        m_SignalProcessingMode;
     BOOLEAN                     m_bEoSReceived;

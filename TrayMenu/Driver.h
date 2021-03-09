@@ -2,6 +2,8 @@
 #include <sal.h>
 #include <stdint.h>
 
+#include "DataFile.h"
+
 #pragma once
 class Driver
 {
@@ -15,5 +17,12 @@ public:
 
 	bool send_data(char* buffer, DWORD length);
 	DWORD retrieve_data(char* buffer, DWORD length);
+
+	DWORD retrieve_speaker_data(char* buffer, DWORD length);
+	DWORD retrieve_speaker_format(WAVEFORMATEX* format);
+
+private:
+	// uninspired name
+	DWORD retrieve_something(DWORD ioctl, void* buffer, DWORD length);
 };
 

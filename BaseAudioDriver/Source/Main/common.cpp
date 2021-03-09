@@ -16,15 +16,8 @@ Abstract:
 #include <initguid.h>
 #include "definitions.h"
 #include "hw.h"
-#include "savedata.h"
 #include "endpoints.h"
 
-//-----------------------------------------------------------------------------
-// CSaveData statics
-//-----------------------------------------------------------------------------
-
-PSAVEWORKER_PARAM       CSaveData::m_pWorkItems = NULL;
-PDEVICE_OBJECT          CSaveData::m_pDeviceObject = NULL;
 //=============================================================================
 // Classes
 //=============================================================================
@@ -436,8 +429,7 @@ Return Value:
         delete m_pHW;
         m_pHW = NULL;
     }
-    
-    CSaveData::DestroyWorkItems();
+
     SAFE_RELEASE(m_pPortClsEtwHelper);
     SAFE_RELEASE(m_pServiceGroupWave);
  
@@ -609,12 +601,6 @@ Return Value:
     
     m_pHW->MixerReset();
 
-    //
-    // Initialize SaveData class.
-    //
-    CSaveData::SetDeviceObject(DeviceObject);   //device object is needed by CSaveData
-    ntStatus = CSaveData::InitializeWorkItems(DeviceObject);
-    IF_FAILED_JUMP(ntStatus, Done);
 Done:
 
     return ntStatus;

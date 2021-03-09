@@ -165,7 +165,7 @@ BEGIN
         BEGIN
             MENUITEM "&SendToDriver",               ID_ITEM1
             MENUITEM "&GetFromDriver",              ID_ITEM2
-            MENUITEM "Item &3",                     ID_ITEM3
+            MENUITEM "Start/Stop listening &thread", ID_ITEM3
             MENUITEM "Item &4",                     ID_ITEM4
         END
         MENUITEM "&About....",                  ID_APP_ABOUT

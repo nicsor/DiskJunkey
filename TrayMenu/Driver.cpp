@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "Driver.h"
+#include "DataFile.h"
 
 
 
@@ -36,6 +37,12 @@ _Analysis_mode_(_Analysis_code_type_user_code_)
 
 #define IOCTL_NONPNP_METHOD_OUT_DIRECT \
     CTL_CODE( FILEIO_TYPE, 0x901, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
+
+#define IOCTL_READ_SPEAKER_FORMAT \
+    CTL_CODE( FILEIO_TYPE, 0x902, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
+
+#define IOCTL_READ_SPEAKER_BUFFER \
+    CTL_CODE( FILEIO_TYPE, 0x903, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
 
 
 // =======================================================================
@@ -145,14 +152,14 @@ bool Driver::send_data(char* buffer, DWORD length)
 	return status;
 }
 
-DWORD Driver::retrieve_data(char* buffer, DWORD length)
+DWORD Driver::retrieve_something(DWORD ioctl, void* buffer, DWORD length)
 {
-    char inBuffer[1] = {0};
+    char inBuffer[1] = { 0 };
     bool status;
     ULONG bytesReturned;
 
     status = DeviceIoControl(m_speaker,
-        (DWORD)IOCTL_NONPNP_METHOD_OUT_DIRECT,
+        (DWORD)ioctl,
         inBuffer,
         sizeof(inBuffer),
         buffer,
@@ -166,5 +173,20 @@ DWORD Driver::retrieve_data(char* buffer, DWORD length)
         return (DWORD)-1;
     }
 
-	return bytesReturned;
+    return bytesReturned;
+}
+
+DWORD Driver::retrieve_data(char* buffer, DWORD length)
+{
+    return retrieve_something((DWORD)IOCTL_NONPNP_METHOD_OUT_DIRECT, buffer, length);
+}
+
+DWORD Driver::retrieve_speaker_data(char* buffer, DWORD length)
+{
+    return retrieve_something((DWORD)IOCTL_READ_SPEAKER_BUFFER, buffer, length);
+}
+
+DWORD Driver::retrieve_speaker_format(WAVEFORMATEX* buffer)
+{
+    return retrieve_something((DWORD)IOCTL_READ_SPEAKER_FORMAT, buffer, 128);
 }

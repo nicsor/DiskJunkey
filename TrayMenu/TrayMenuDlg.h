@@ -10,6 +10,7 @@
 
 #pragma once
 
+#include <thread>
 #include "Driver.h"
 
 /////////////////////////////////////////////////////////////////////////////
@@ -35,6 +36,10 @@ protected:
 	HICON m_hIcon;
 
 	Driver * m_driver;
+	std::thread m_thread;
+	bool m_stop;
+
+	void capture_audio();
 
 	virtual BOOL OnInitDialog();
 	afx_msg void OnSysCommand(UINT nID, LPARAM lParam);
