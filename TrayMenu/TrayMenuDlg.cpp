@@ -18,6 +18,7 @@
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #undef THIS_FILE
+#undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #endif
 
@@ -160,33 +161,22 @@ void CTrayMenuDlg::OnClose()
 	}
 }
 
-// If you add a minimize button to your dialog, you will need the code below
-//  to draw the icon.  For MFC applications using the document/view model,
-//  this is automatically done for you by the framework.
-
-void CTrayMenuDlg::OnPaint() 
+void CTrayMenuDlg::OnPaint()
 {
-	if (IsIconic())
-	{
-		CPaintDC dc(this); // device context for painting
+	CWnd::ModifyStyle(WS_SYSMENU | WS_CAPTION, 0);
 
-		SendMessage(WM_ICONERASEBKGND, (WPARAM) dc.GetSafeHdc(), 0);
+	// Get this window's area
+	CRect dialogInfo;
+	CRect desktopInfo;
 
-		// Center icon in client rectangle
-		int cxIcon = GetSystemMetrics(SM_CXICON);
-		int cyIcon = GetSystemMetrics(SM_CYICON);
-		CRect rect;
-		GetClientRect(&rect);
-		int x = (rect.Width() - cxIcon + 1) / 2;
-		int y = (rect.Height() - cyIcon + 1) / 2;
+	GetClientRect(&dialogInfo);
+	GetDesktopWindow()->GetClientRect(&desktopInfo);
 
-		// Draw the icon
-		dc.DrawIcon(x, y, m_hIcon);
-	}
-	else
-	{
-		CDialog::OnPaint();
-	}
+	// Redraw the window in the right corner
+	SetWindowPos(NULL, desktopInfo.Width() - dialogInfo.Width(), desktopInfo.Height() - dialogInfo.Height(), -1, -1,
+		SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+	CDialog::OnPaint();
 }
 
 // The system calls this to obtain the cursor to display while the user drags
@@ -235,6 +225,9 @@ BOOL CTrayMenuDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 				break;
 			case(ID_EV_EXIT):
 				OnAppExit();
+				break;
+			case(IDC_HIDE):
+				OnClose();
 				break;
 			default:
 			{
@@ -306,6 +299,8 @@ void CTrayMenuDlg::OnTrayContextMenu()
 
 void CTrayMenuDlg::OnAppAbout() 
 {
+	char* buffer = "Just a simple demo app to highlight how to interact with the gui. Formless with dynamic tray. So, with the titlebar hidden this message won't be seen. Hmm... Decisions, decisions ...";
+	::MessageBox(NULL, buffer, _T("Send"), MB_OK);
 }
 
 void CTrayMenuDlg::OnAppExit() 
