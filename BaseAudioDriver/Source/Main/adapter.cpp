@@ -369,7 +369,7 @@ BADCustomDispatch(
 
                 // TODO: better treatment
                 ULONG availableData = (ULONG)(g_SpeakerCurrentPosition - g_SpeakerLastReadPosition);
-                DPF(D_ERROR, ("IOCTL_READ_SPEAKER_BUFFER current: %d , %d , %d , %d", (ULONG)g_SpeakerCurrentPosition, (ULONG)g_SpeakerLastReadPosition, availableData, maxSizeToFetch))
+                // DPF(D_TERSE, ("IOCTL_READ_SPEAKER_BUFFER current: %d , %d , %d , %d", (ULONG)g_SpeakerCurrentPosition, (ULONG)g_SpeakerLastReadPosition, availableData, maxSizeToFetch))
 
                 if (availableData > 0) {
                     if (availableData > maxSizeToFetch) {
@@ -380,7 +380,7 @@ BADCustomDispatch(
                     }
 
                     ULONG bufferOffset = g_SpeakerLastReadPosition % g_SpeakerBufferSize;
-                    g_SpeakerLastReadPosition += maxSizeToFetch;
+                    g_SpeakerLastReadPosition += availableData;
 
 
                     ULONG writeSize = min(availableData, g_SpeakerBufferSize - bufferOffset);
