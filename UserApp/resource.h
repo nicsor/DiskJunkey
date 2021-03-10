@@ -1,10 +1,10 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ generated include file.
-// Used by TrayMenu.rc
+// Used by HelloApp.rc
 //
 #define IDM_ABOUTBOX                    0x0010
 #define IDS_ABOUTBOX                    101
-#define IDD_TRAYMENU_DIALOG             102
+#define IDD_HELLOAPP_DIALOG             102
 #define IDR_MAINFRAME                   128
 #define IDR_MENU1                       129
 #define IDR_MENUIMAGES                  130

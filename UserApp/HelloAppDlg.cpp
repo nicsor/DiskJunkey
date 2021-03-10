@@ -9,8 +9,8 @@
 // Microsoft Foundation Classes product.
 
 #include "stdafx.h"
-#include "TrayMenu.h"
-#include "TrayMenuDlg.h"
+#include "HelloApp.h"
+#include "HelloAppDlg.h"
 
 #include <chrono>
 #include <functional>
@@ -48,10 +48,10 @@ bool dynamicItems[MAX_NUMBER_OF_DYNAMIC_ITEMS] = {false};
 
 
 /////////////////////////////////////////////////////////////////////////////
-// CTrayMenuDlg dialog
+// CHelloAppDlg dialog
 
-CTrayMenuDlg::CTrayMenuDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CTrayMenuDlg::IDD, pParent),
+CHelloAppDlg::CHelloAppDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CHelloAppDlg::IDD, pParent),
 	m_close(false),
 	m_stop(true)
 {
@@ -70,7 +70,7 @@ CTrayMenuDlg::CTrayMenuDlg(CWnd* pParent /*=NULL*/)
 #endif
 }
 
-CTrayMenuDlg::~CTrayMenuDlg ()
+CHelloAppDlg::~CHelloAppDlg ()
 {
 	m_stop = true;
 	if (m_thread.joinable()) {
@@ -81,12 +81,12 @@ CTrayMenuDlg::~CTrayMenuDlg ()
 	Shell_NotifyIcon (NIM_DELETE, &m_nid);
 }
 
-void CTrayMenuDlg::DoDataExchange(CDataExchange* pDX)
+void CHelloAppDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 }
 
-BEGIN_MESSAGE_MAP(CTrayMenuDlg, CDialog)
+BEGIN_MESSAGE_MAP(CHelloAppDlg, CDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
@@ -94,7 +94,7 @@ BEGIN_MESSAGE_MAP(CTrayMenuDlg, CDialog)
 	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
-BOOL CTrayMenuDlg::OnInitDialog()
+BOOL CHelloAppDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
@@ -139,7 +139,7 @@ BOOL CTrayMenuDlg::OnInitDialog()
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
 
-void CTrayMenuDlg::OnSysCommand(UINT nID, LPARAM lParam)
+void CHelloAppDlg::OnSysCommand(UINT nID, LPARAM lParam)
 {
 	if ((nID & 0xFFF0) == IDM_ABOUTBOX)
 	{
@@ -150,7 +150,7 @@ void CTrayMenuDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	}
 }
 
-void CTrayMenuDlg::OnClose()
+void CHelloAppDlg::OnClose()
 {
 	if (!m_close) {
 		ShowWindow(SW_HIDE);
@@ -161,7 +161,7 @@ void CTrayMenuDlg::OnClose()
 	}
 }
 
-void CTrayMenuDlg::OnPaint()
+void CHelloAppDlg::OnPaint()
 {
 	CWnd::ModifyStyle(WS_SYSMENU | WS_CAPTION, 0);
 
@@ -181,12 +181,12 @@ void CTrayMenuDlg::OnPaint()
 
 // The system calls this to obtain the cursor to display while the user drags
 //  the minimized window.
-HCURSOR CTrayMenuDlg::OnQueryDragIcon()
+HCURSOR CHelloAppDlg::OnQueryDragIcon()
 {
 	return (HCURSOR) m_hIcon;
 }
 
-LRESULT CTrayMenuDlg::OnTrayNotify(WPARAM /*wp*/, LPARAM lp)
+LRESULT CHelloAppDlg::OnTrayNotify(WPARAM /*wp*/, LPARAM lp)
 {
 	UINT uiMsg = (UINT) lp;
 
@@ -204,7 +204,7 @@ LRESULT CTrayMenuDlg::OnTrayNotify(WPARAM /*wp*/, LPARAM lp)
 	return 0;
 }
 
-BOOL CTrayMenuDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
+BOOL CHelloAppDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
 {
 	if (nCode == CN_COMMAND)
 	{
@@ -249,12 +249,12 @@ BOOL CTrayMenuDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 	return CDialog::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
 }
 
-void CTrayMenuDlg::OnDynamicItemClick(int id)
+void CHelloAppDlg::OnDynamicItemClick(int id)
 {
 	dynamicItems[id] = !dynamicItems[id];
 }
 
-void CTrayMenuDlg::OnTrayContextMenu()
+void CHelloAppDlg::OnTrayContextMenu()
 {
 	CPoint point;
 	::GetCursorPos(&point);
@@ -297,24 +297,24 @@ void CTrayMenuDlg::OnTrayContextMenu()
 	pMenu->SetForegroundWindow ();
 }
 
-void CTrayMenuDlg::OnAppAbout() 
+void CHelloAppDlg::OnAppAbout() 
 {
 	char* buffer = "Just a simple demo app to highlight how to interact with the gui. Formless with dynamic tray. So, with the titlebar hidden this message won't be seen. Hmm... Decisions, decisions ...";
 	::MessageBox(NULL, buffer, _T("Send"), MB_OK);
 }
 
-void CTrayMenuDlg::OnAppExit() 
+void CHelloAppDlg::OnAppExit() 
 {
 	m_close = true;
 	PostMessage (WM_CLOSE);
 }
 
-void CTrayMenuDlg::OnAppOpen() 
+void CHelloAppDlg::OnAppOpen() 
 {
 	ShowWindow (SW_SHOWNORMAL);
 }
 
-void CTrayMenuDlg::SendStaticDataSample() 
+void CHelloAppDlg::SendStaticDataSample() 
 {
 #if ENABLE_DRIVER_POOLING
 	char message[256];
@@ -327,7 +327,7 @@ void CTrayMenuDlg::SendStaticDataSample()
 }
 
 
-void CTrayMenuDlg::RetrieveStaticDataSample() 
+void CHelloAppDlg::RetrieveStaticDataSample() 
 {
 #if ENABLE_DRIVER_POOLING
 	char message[256];
@@ -339,7 +339,7 @@ void CTrayMenuDlg::RetrieveStaticDataSample()
 #endif
 }
 
-void CTrayMenuDlg::capture_audio()
+void CHelloAppDlg::capture_audio()
 {
 	char dataBuffer[4 * 1024]; // TODO: must love them magic numbers
 	BYTE waveFormat[128];  // WAVEFORMATEX*
@@ -358,14 +358,14 @@ void CTrayMenuDlg::capture_audio()
 	}
 }
 
-void CTrayMenuDlg::ToggleRecord() 
+void CHelloAppDlg::ToggleRecord() 
 {
 #if ENABLE_DRIVER_POOLING
 	if (m_stop) {
 		m_stop = false;
-		m_thread = std::thread(std::bind(&CTrayMenuDlg::capture_audio, this));
+		m_thread = std::thread(std::bind(&CHelloAppDlg::capture_audio, this));
 
-		::MessageBox(NULL, _T("Listening thread started"), _T("TrayMenu"), MB_OK);
+		::MessageBox(NULL, _T("Listening thread started"), _T("HelloApp"), MB_OK);
 	}
 	else {
 		m_stop = true;
@@ -374,7 +374,7 @@ void CTrayMenuDlg::ToggleRecord()
 			m_thread.join();
 		}
 
-		::MessageBox(NULL, _T("Listening thread stopped"), _T("TrayMenu"), MB_OK);
+		::MessageBox(NULL, _T("Listening thread stopped"), _T("HelloApp"), MB_OK);
 	}
 #endif
 }

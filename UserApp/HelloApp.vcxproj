@@ -66,10 +66,11 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <TargetName>TrayMenu</TargetName>
+    <TargetName>HelloApp</TargetName>
     <ProjectGUID>{34545473-46B9-42A8-A54E-575BED25C115}</ProjectGUID>
-    <RootNamespace>TrayMenu</RootNamespace>
+    <RootNamespace>HelloApp</RootNamespace>
     <Keyword>MFCProj</Keyword>
+    <ProjectName>HelloApp</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -370,7 +371,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -407,7 +408,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|X64'">
@@ -416,7 +417,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -452,7 +453,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -461,7 +462,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -500,7 +501,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|X64'">
@@ -509,7 +510,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -545,7 +546,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Static|Win32'">
@@ -554,7 +555,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -591,7 +592,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug Static|X64'">
@@ -600,7 +601,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -636,7 +637,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|Win32'">
@@ -645,7 +646,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -682,7 +683,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release Static|X64'">
@@ -691,7 +692,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -727,7 +728,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|Win32'">
@@ -736,7 +737,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -773,7 +774,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug|X64'">
@@ -782,7 +783,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -818,7 +819,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug Static|Win32'">
@@ -827,7 +828,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -864,7 +865,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Debug Static|X64'">
@@ -873,7 +874,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -909,7 +910,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|Win32'">
@@ -918,7 +919,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -954,7 +955,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release|X64'">
@@ -963,7 +964,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -998,7 +999,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release Static|Win32'">
@@ -1007,7 +1008,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>Win32</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -1043,7 +1044,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Unicode Release Static|X64'">
@@ -1052,7 +1053,7 @@
       <MkTypLibCompatible>true</MkTypLibCompatible>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <TargetEnvironment>X64</TargetEnvironment>
-      <TypeLibraryName>.\..\bin/TrayMenu.tlb</TypeLibraryName>
+      <TypeLibraryName>.\..\bin/HelloApp.tlb</TypeLibraryName>
       <HeaderFileName>
       </HeaderFileName>
     </Midl>
@@ -1087,7 +1088,7 @@
     </Link>
     <BscMake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\..\bin/TrayMenu.bsc</OutputFile>
+      <OutputFile>.\..\bin/HelloApp.bsc</OutputFile>
     </BscMake>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -1111,11 +1112,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Unicode Release Static|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Unicode Release Static|X64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TrayMenu.cpp" />
-    <ClCompile Include="TrayMenuDlg.cpp" />
+    <ClCompile Include="HelloApp.cpp" />
+    <ClCompile Include="HelloAppDlg.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="TrayMenu.rc" />
+    <ResourceCompile Include="HelloApp.rc" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Driver.h" />
@@ -1123,16 +1124,13 @@
     <ClInclude Include="DataFile.h" />
     <ClInclude Include="StdAfx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="TrayMenu.h" />
-    <ClInclude Include="TrayMenuDlg.h" />
+    <ClInclude Include="HelloApp.h" />
+    <ClInclude Include="HelloAppDlg.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="ReadMe.htm">
-      <DeploymentContent>true</DeploymentContent>
-    </None>
     <None Include="res\menuimag.bmp" />
-    <None Include="res\TrayMenu.ico" />
-    <None Include="res\TrayMenu.rc2" />
+    <None Include="res\HelloApp.ico" />
+    <None Include="res\HelloApp.rc2" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

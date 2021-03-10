@@ -14,19 +14,19 @@
 #include "Driver.h"
 
 /////////////////////////////////////////////////////////////////////////////
-// CTrayMenuDlg dialog
+// CHelloAppDlg dialog
 
 #define CDialog CDialogEx
 
-class CTrayMenuDlg : public CDialog
+class CHelloAppDlg : public CDialog
 {
 // Construction
 public:
-	CTrayMenuDlg(CWnd* pParent = NULL);	// standard constructor
-	virtual ~CTrayMenuDlg();
+	CHelloAppDlg(CWnd* pParent = NULL);	// standard constructor
+	virtual ~CHelloAppDlg();
 
 // Dialog Data
-	enum { IDD = IDD_TRAYMENU_DIALOG };
+	enum { IDD = IDD_HELLOAPP_DIALOG };
 
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support

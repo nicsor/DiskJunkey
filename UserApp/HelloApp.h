@@ -17,14 +17,14 @@
 #include "resource.h"		// main symbols
 
 /////////////////////////////////////////////////////////////////////////////
-// CTrayMenuApp:
-// See TrayMenu.cpp for the implementation of this class
+// CHelloAppApp:
+// See HelloApp.cpp for the implementation of this class
 //
 
-class CTrayMenuApp : public CWinAppEx
+class CHelloAppApp : public CWinAppEx
 {
 public:
-	CTrayMenuApp();
+	CHelloAppApp();
 
 // Overrides
 	public:
@@ -34,4 +34,4 @@ public:
 	DECLARE_MESSAGE_MAP()
 };
 
-extern CTrayMenuApp theApp;
+extern CHelloAppApp theApp;

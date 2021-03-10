@@ -9,8 +9,8 @@
 // Microsoft Foundation Classes product.
 
 #include "stdafx.h"
-#include "TrayMenu.h"
-#include "TrayMenuDlg.h"
+#include "HelloApp.h"
+#include "HelloAppDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -19,30 +19,30 @@ static char THIS_FILE[] = __FILE__;
 #endif
 
 /////////////////////////////////////////////////////////////////////////////
-// CTrayMenuApp
+// CHelloAppApp
 
-BEGIN_MESSAGE_MAP(CTrayMenuApp, CWinAppEx)
+BEGIN_MESSAGE_MAP(CHelloAppApp, CWinAppEx)
 	ON_COMMAND(ID_HELP, CWinAppEx::OnHelp)
 END_MESSAGE_MAP()
 
 /////////////////////////////////////////////////////////////////////////////
-// CTrayMenuApp construction
+// CHelloAppApp construction
 
-CTrayMenuApp::CTrayMenuApp()
+CHelloAppApp::CHelloAppApp()
 {
 	// TODO: add construction code here,
 	// Place all significant initialization in InitInstance
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// The one and only CTrayMenuApp object
+// The one and only CHelloAppApp object
 
-CTrayMenuApp theApp;
+CHelloAppApp theApp;
 
 /////////////////////////////////////////////////////////////////////////////
-// CTrayMenuApp initialization
+// CHelloAppApp initialization
 
-BOOL CTrayMenuApp::InitInstance()
+BOOL CHelloAppApp::InitInstance()
 {
 	AfxEnableControlContainer();
 
@@ -55,7 +55,7 @@ BOOL CTrayMenuApp::InitInstance()
 	//  of your final executable, you should remove from the following
 	//  the specific initialization routines you do not need.
 
-	CTrayMenuDlg dlg;
+	CHelloAppDlg dlg;
 	m_pMainWnd = &dlg;
 	int nResponse = (int) dlg.DoModal();
 	if (nResponse == IDOK)
