@@ -31,6 +31,9 @@ public:
 	protected:
 	virtual void DoDataExchange(CDataExchange* pDX);	// DDX/DDV support
 
+
+	virtual BOOL OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo);
+
 // Implementation
 protected:
 	HICON m_hIcon;
@@ -48,11 +51,12 @@ protected:
 	afx_msg void OnAppAbout();
 	afx_msg void OnAppExit();
 	afx_msg void OnAppOpen();
-	afx_msg void OnItem1();
-	afx_msg void OnItem2();
-	afx_msg void OnItem3();
-	afx_msg void OnItem4();
-	afx_msg void OnUpdateItem4(CCmdUI* pCmdUI);
+
+	afx_msg void SendStaticDataSample();
+	afx_msg void RetrieveStaticDataSample();
+	afx_msg void ToggleRecord();
+
+	afx_msg void OnDynamicItemClick(int id);
 	afx_msg LRESULT OnTrayNotify(WPARAM wp, LPARAM lp);
 
 	DECLARE_MESSAGE_MAP()

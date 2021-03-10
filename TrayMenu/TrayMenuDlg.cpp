@@ -30,6 +30,21 @@ DEFINE_GUID(MICARRAY1_CUSTOM_NAME,
 	0x6994AD04, 0x93EF, 0x11D0, 0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96);
 
 
+#define ENABLE_DRIVER_POOLING FALSE
+
+enum {
+	ID_EV_SEND_DATA = 12345,
+	ID_EV_RETRIEVE_DATA,
+	ID_EV_TOGGLE_RECORD,
+	ID_EV_EXIT,
+	ID_EV_FIRST_DYNAMIC_ITEM
+};
+
+const int MAX_NUMBER_OF_DYNAMIC_ITEMS = 7;
+
+bool dynamicItems[MAX_NUMBER_OF_DYNAMIC_ITEMS] = {false};
+
+
 /////////////////////////////////////////////////////////////////////////////
 // CTrayMenuDlg dialog
 
@@ -44,8 +59,11 @@ CTrayMenuDlg::CTrayMenuDlg(CWnd* pParent /*=NULL*/)
 	m_nid.cbSize = sizeof(m_nid);
 	m_nid.uFlags = NIF_ICON | NIF_TIP | NIF_MESSAGE;
 	
+
+#if ENABLE_DRIVER_POOLING
 	m_driver = new Driver((LPGUID)&MICARRAY1_CUSTOM_NAME);
 	m_stop = True;
+#endif
 }
 
 CTrayMenuDlg::~CTrayMenuDlg ()
@@ -68,19 +86,8 @@ BEGIN_MESSAGE_MAP(CTrayMenuDlg, CDialog)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
-	ON_COMMAND(ID_APP_ABOUT, OnAppAbout)
-	ON_COMMAND(ID_APP_EXIT, OnAppExit)
-	ON_COMMAND(ID_APP_OPEN, OnAppOpen)
-	ON_COMMAND(ID_ITEM1, OnItem1)
-	ON_COMMAND(ID_ITEM2, OnItem2)
-	ON_COMMAND(ID_ITEM3, OnItem3)
-	ON_COMMAND(ID_ITEM4, OnItem4)
-	ON_UPDATE_COMMAND_UI(ID_ITEM4, OnUpdateItem4)
 	ON_MESSAGE(UM_TRAYNOTIFY, OnTrayNotify)
 END_MESSAGE_MAP()
-
-/////////////////////////////////////////////////////////////////////////////
-// CTrayMenuDlg message handlers
 
 BOOL CTrayMenuDlg::OnInitDialog()
 {
@@ -192,17 +199,84 @@ LRESULT CTrayMenuDlg::OnTrayNotify(WPARAM /*wp*/, LPARAM lp)
 	return 0;
 }
 
-void CTrayMenuDlg::OnTrayContextMenu ()
+BOOL CTrayMenuDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINFO* pHandlerInfo)
+{
+	if (nCode == CN_COMMAND)
+	{
+		bool isManaged = true;
+
+		switch (nID) {
+			case(ID_EV_SEND_DATA):
+				SendStaticDataSample();
+				break;
+			case(ID_EV_RETRIEVE_DATA):
+				RetrieveStaticDataSample();
+				break;
+			case(ID_EV_TOGGLE_RECORD):
+				ToggleRecord();
+				break;
+			case(ID_EV_EXIT):
+				OnAppExit();
+				break;
+			default:
+			{
+				if (nID >= ID_EV_FIRST_DYNAMIC_ITEM && nID < ID_EV_FIRST_DYNAMIC_ITEM + MAX_NUMBER_OF_DYNAMIC_ITEMS)
+				{
+					OnDynamicItemClick(nID - ID_EV_FIRST_DYNAMIC_ITEM);
+				}
+				else {
+					isManaged = false;
+				}
+			}
+		}
+
+		if (isManaged) {
+			return true;
+		}
+	}
+
+	return CDialog::OnCmdMsg(nID, nCode, pExtra, pHandlerInfo);
+}
+
+void CTrayMenuDlg::OnDynamicItemClick(int id)
+{
+	dynamicItems[id] = !dynamicItems[id];
+}
+
+void CTrayMenuDlg::OnTrayContextMenu()
 {
 	CPoint point;
-	::GetCursorPos (&point);
+	::GetCursorPos(&point);
 
 	CMenu menu;
-	menu.LoadMenu (IDR_MENU1);
+	menu.CreatePopupMenu();
 
-	CMFCPopupMenu::SetForceShadow (TRUE);
+	menu.AppendMenu(MF_STRING, ID_EV_SEND_DATA, "&Send Data To Driver");
+	menu.AppendMenu(MF_STRING, ID_EV_RETRIEVE_DATA, "&Get Data From Driver");
 
-	HMENU hMenu = menu.GetSubMenu (0)->Detach ();
+	{
+		char message[256];
+		snprintf(message, sizeof(message), "%s listening &thread", m_stop ? "Stop" : "Start");
+		menu.AppendMenu(MF_STRING, ID_EV_TOGGLE_RECORD, message);
+	}
+
+	CMenu* chmenu = new CMenu;
+	chmenu->CreatePopupMenu();
+	for (short i = 0; i < sizeof(dynamicItems); i++) {
+		int eventId = ID_EV_FIRST_DYNAMIC_ITEM + i;
+
+		char message[256];
+		snprintf(message, sizeof(message), "Dynamic item %d", i + 1);
+
+		UINT flags = dynamicItems[i] ? MF_CHECKED : MF_UNCHECKED;
+		chmenu->AppendMenu(flags | MF_STRING, eventId, message);
+	}
+
+	menu.AppendMenu(MF_POPUP, (UINT)chmenu->m_hMenu, "Dynamic entries");
+	menu.AppendMenu(MF_STRING, ID_EV_EXIT, "&Exit");
+
+
+	HMENU hMenu = menu.Detach ();
 	CMFCPopupMenu* pMenu = theApp.GetContextMenuManager()->ShowPopupMenu(hMenu, point.x, point.y, this, TRUE);
 
 	pMenu->SetForegroundWindow ();
@@ -222,25 +296,29 @@ void CTrayMenuDlg::OnAppOpen()
 	ShowWindow (SW_SHOWNORMAL);
 }
 
-void CTrayMenuDlg::OnItem1() 
+void CTrayMenuDlg::SendStaticDataSample() 
 {
+#if ENABLE_DRIVER_POOLING
 	char message[256];
 	char* buffer = "Ana are mere";
 	bool status = m_driver->send_data(buffer, strlen(buffer));
 
 	snprintf(message, sizeof(message), "Sent: [%s] [%d] status:[%d]", buffer, strlen(buffer), status);
 	::MessageBox (NULL, message, _T("Send"), MB_OK);
+#endif
 }
 
 
-void CTrayMenuDlg::OnItem2() 
+void CTrayMenuDlg::RetrieveStaticDataSample() 
 {
+#if ENABLE_DRIVER_POOLING
 	char message[256];
 	char buffer[256];
 	int len = m_driver->retrieve_data(buffer, sizeof(buffer));
 
 	snprintf(message, sizeof(message), "Retrieved: [%s] [%d]", buffer, len);
 	::MessageBox (NULL, message, _T("Retrieve"), MB_OK);
+#endif
 }
 
 void CTrayMenuDlg::capture_audio()
@@ -262,8 +340,9 @@ void CTrayMenuDlg::capture_audio()
 	}
 }
 
-void CTrayMenuDlg::OnItem3() 
+void CTrayMenuDlg::ToggleRecord() 
 {
+#if ENABLE_DRIVER_POOLING
 	if (m_stop) {
 		m_stop = false;
 		m_thread = std::thread(std::bind(&CTrayMenuDlg::capture_audio, this));
@@ -279,18 +358,5 @@ void CTrayMenuDlg::OnItem3()
 
 		::MessageBox(NULL, _T("Listening thread stopped"), _T("TrayMenu"), MB_OK);
 	}
-
+#endif
 }
-
-static BOOL bIsItem4Checked = TRUE;
-
-void CTrayMenuDlg::OnItem4() 
-{
-	bIsItem4Checked = !bIsItem4Checked;
-}
-
-void CTrayMenuDlg::OnUpdateItem4(CCmdUI* pCmdUI) 
-{
-	pCmdUI->SetCheck (bIsItem4Checked);
-}
-

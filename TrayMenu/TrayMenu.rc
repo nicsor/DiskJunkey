@@ -153,30 +153,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Menu
-//
-
-IDR_MENU1 MENU DISCARDABLE 
-BEGIN
-    POPUP "Tray"
-    BEGIN
-        MENUITEM "&Open....",                   ID_APP_OPEN
-        POPUP "&Items"
-        BEGIN
-            MENUITEM "&SendToDriver",               ID_ITEM1
-            MENUITEM "&GetFromDriver",              ID_ITEM2
-            MENUITEM "Start/Stop listening &thread", ID_ITEM3
-            MENUITEM "Item &4",                     ID_ITEM4
-        END
-        MENUITEM "&About....",                  ID_APP_ABOUT
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
-    END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Toolbar
 //
 
