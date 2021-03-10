@@ -36,6 +36,7 @@ enum {
 	ID_EV_SEND_DATA = 12345,
 	ID_EV_RETRIEVE_DATA,
 	ID_EV_TOGGLE_RECORD,
+	ID_EV_SHOW_APP,
 	ID_EV_EXIT,
 	ID_EV_FIRST_DYNAMIC_ITEM
 };
@@ -49,7 +50,9 @@ bool dynamicItems[MAX_NUMBER_OF_DYNAMIC_ITEMS] = {false};
 // CTrayMenuDlg dialog
 
 CTrayMenuDlg::CTrayMenuDlg(CWnd* pParent /*=NULL*/)
-	: CDialog(CTrayMenuDlg::IDD, pParent)
+	: CDialog(CTrayMenuDlg::IDD, pParent),
+	m_close(false),
+	m_stop(true)
 {
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -68,7 +71,7 @@ CTrayMenuDlg::CTrayMenuDlg(CWnd* pParent /*=NULL*/)
 
 CTrayMenuDlg::~CTrayMenuDlg ()
 {
-	m_stop = True;
+	m_stop = true;
 	if (m_thread.joinable()) {
 		m_thread.join();
 	}
@@ -87,6 +90,7 @@ BEGIN_MESSAGE_MAP(CTrayMenuDlg, CDialog)
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
 	ON_MESSAGE(UM_TRAYNOTIFY, OnTrayNotify)
+	ON_WM_CLOSE()
 END_MESSAGE_MAP()
 
 BOOL CTrayMenuDlg::OnInitDialog()
@@ -142,6 +146,17 @@ void CTrayMenuDlg::OnSysCommand(UINT nID, LPARAM lParam)
 	else
 	{
 		CDialog::OnSysCommand(nID, lParam);
+	}
+}
+
+void CTrayMenuDlg::OnClose()
+{
+	if (!m_close) {
+		ShowWindow(SW_HIDE);
+	}
+	else
+	{
+		CDialog::OnClose();
 	}
 }
 
@@ -215,6 +230,9 @@ BOOL CTrayMenuDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 			case(ID_EV_TOGGLE_RECORD):
 				ToggleRecord();
 				break;
+			case(ID_EV_SHOW_APP):
+				OnAppOpen();
+				break;
 			case(ID_EV_EXIT):
 				OnAppExit();
 				break;
@@ -250,6 +268,10 @@ void CTrayMenuDlg::OnTrayContextMenu()
 
 	CMenu menu;
 	menu.CreatePopupMenu();
+
+	if (!IsWindowVisible()) {
+		menu.AppendMenu(MF_STRING, ID_EV_SHOW_APP, "Show &App");
+	}
 
 	menu.AppendMenu(MF_STRING, ID_EV_SEND_DATA, "&Send Data To Driver");
 	menu.AppendMenu(MF_STRING, ID_EV_RETRIEVE_DATA, "&Get Data From Driver");
@@ -288,6 +310,7 @@ void CTrayMenuDlg::OnAppAbout()
 
 void CTrayMenuDlg::OnAppExit() 
 {
+	m_close = true;
 	PostMessage (WM_CLOSE);
 }
 

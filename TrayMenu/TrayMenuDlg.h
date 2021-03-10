@@ -40,6 +40,7 @@ protected:
 
 	Driver * m_driver;
 	std::thread m_thread;
+	bool m_close;
 	bool m_stop;
 
 	void capture_audio();
@@ -51,6 +52,7 @@ protected:
 	afx_msg void OnAppAbout();
 	afx_msg void OnAppExit();
 	afx_msg void OnAppOpen();
+	afx_msg void OnClose();
 
 	afx_msg void SendStaticDataSample();
 	afx_msg void RetrieveStaticDataSample();
