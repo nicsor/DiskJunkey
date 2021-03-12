@@ -1630,6 +1630,7 @@ Return Value:
 
             default:
                 DPF(D_TERSE, ("[PropertyHandler_WaveFilter: Invalid Device Request]"));
+                break;
         }
     }
 

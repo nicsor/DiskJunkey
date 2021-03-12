@@ -21,8 +21,10 @@ public:
 	DWORD retrieve_speaker_data(char* buffer, DWORD length);
 	DWORD retrieve_speaker_format(WAVEFORMATEX* format);
 
+	bool send_mic_data(char* buffer, DWORD length);
 private:
 	// uninspired name
 	DWORD retrieve_something(DWORD ioctl, void* buffer, DWORD length);
+	bool send_something(DWORD ioctl, char* buffer, DWORD length);
 };
 

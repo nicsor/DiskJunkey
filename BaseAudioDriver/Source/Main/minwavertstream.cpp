@@ -268,6 +268,11 @@ Return Value:
         g_SpeakerBuffer = m_pDmaBuffer;
         g_SpeakerBufferSize = m_ulDmaBufferSize;
     }
+    else
+    {
+        g_MicrophoneBuffer = m_pDmaBuffer;
+        g_MicrophoneBufferSize = m_ulDmaBufferSize;
+    }
 
     m_pDpc = (PRKDPC)ExAllocatePool2(POOL_FLAG_NON_PAGED, sizeof(KDPC), MINWAVERTSTREAM_POOLTAG);
     if (!m_pDpc)
@@ -528,6 +533,11 @@ NTSTATUS CMiniportWaveRTStream::AllocateBufferWithNotification
         g_SpeakerBuffer = m_pDmaBuffer;
         g_SpeakerBufferSize = RequestedSize_;
     }
+    else
+    {
+        g_MicrophoneBuffer = m_pDmaBuffer;
+        g_MicrophoneBufferSize = RequestedSize_;
+    }
 
     ulBufferDurationMs = (RequestedSize_ * 1000) / m_ulDmaMovementRate;
     m_ulNotificationIntervalMs = ulBufferDurationMs / NotificationCount_;
@@ -556,6 +566,11 @@ VOID CMiniportWaveRTStream::FreeBufferWithNotification
     {
         g_SpeakerBuffer = NULL;
         g_SpeakerBufferSize = 0;
+    }
+    else
+    {
+        g_MicrophoneBuffer = NULL;
+        g_MicrophoneBufferSize = 0;
     }
 
     if (Mdl_ != NULL)
@@ -712,6 +727,11 @@ _In_        ULONG       Size_
         g_SpeakerBuffer = NULL;
         g_SpeakerBufferSize = 0;
     }
+    else
+    {
+        g_MicrophoneBuffer = NULL;
+        g_MicrophoneBufferSize = 0;
+    }
 
     if (Mdl_ != NULL)
     {
@@ -785,6 +805,11 @@ _Out_   MEMORY_CACHING_TYPE    *CacheType_
     {
         g_SpeakerBuffer = m_pDmaBuffer;
         g_SpeakerBufferSize = RequestedSize_;
+    }
+    else
+    {
+        g_MicrophoneBuffer = m_pDmaBuffer;
+        g_MicrophoneBufferSize = RequestedSize_;
     }
 
     m_ulNotificationsPerBuffer = 0;
@@ -1400,6 +1425,10 @@ VOID CMiniportWaveRTStream::UpdatePosition
     {
         g_SpeakerCurrentPosition = m_ullLinearPosition;
     }
+    else
+    {
+        g_MicrophoneCurrentPosition = m_ullLinearPosition;
+    }
     
     // Update the DMA time stamp for the next call to GetPosition()
     //
@@ -1424,8 +1453,11 @@ ByteDisplacement - # of bytes to process.
 
 --*/
 {
+    (void)ByteDisplacement;
+    /*
     ULONG bufferOffset = m_ullLinearPosition % m_ulDmaBufferSize;
 
+     Should probably 0 the previous bytes
     // Normally this will loop no more than once for a single wrap, but if
     // many bytes have been displaced then this may loops many times.
     while (ByteDisplacement > 0)
@@ -1437,6 +1469,7 @@ ByteDisplacement - # of bytes to process.
         bufferOffset = (bufferOffset + runWrite) % m_ulDmaBufferSize;
         ByteDisplacement -= runWrite;
     }
+    */
 }
 
 //=============================================================================

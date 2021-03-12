@@ -31,12 +31,13 @@ DEFINE_GUID(MICARRAY1_CUSTOM_NAME,
 	0x6994AD04, 0x93EF, 0x11D0, 0xA3, 0xCC, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96);
 
 
-#define ENABLE_DRIVER_POOLING FALSE
+#define ENABLE_DRIVER_POOLING TRUE
 
 enum {
 	ID_EV_SEND_DATA = 12345,
 	ID_EV_RETRIEVE_DATA,
 	ID_EV_TOGGLE_RECORD,
+	ID_EV_TOGGLE_LOOP,
 	ID_EV_SHOW_APP,
 	ID_EV_EXIT,
 	ID_EV_FIRST_DYNAMIC_ITEM
@@ -53,7 +54,8 @@ bool dynamicItems[MAX_NUMBER_OF_DYNAMIC_ITEMS] = {false};
 CHelloAppDlg::CHelloAppDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CHelloAppDlg::IDD, pParent),
 	m_close(false),
-	m_stop(true)
+	m_stopped_record(true),
+	m_stopped_loop(true)
 {
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
@@ -66,16 +68,13 @@ CHelloAppDlg::CHelloAppDlg(CWnd* pParent /*=NULL*/)
 
 #if ENABLE_DRIVER_POOLING
 	m_driver = new Driver((LPGUID)&MICARRAY1_CUSTOM_NAME);
-	m_stop = True;
 #endif
 }
 
 CHelloAppDlg::~CHelloAppDlg ()
 {
-	m_stop = true;
-	if (m_thread.joinable()) {
-		m_thread.join();
-	}
+	StopRecord();
+	StopLoop();
 
 	m_nid.hIcon = NULL;
 	Shell_NotifyIcon (NIM_DELETE, &m_nid);
@@ -220,6 +219,9 @@ BOOL CHelloAppDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 			case(ID_EV_TOGGLE_RECORD):
 				ToggleRecord();
 				break;
+			case(ID_EV_TOGGLE_LOOP):
+				ToggleLoop();
+				break;
 			case(ID_EV_SHOW_APP):
 				OnAppOpen();
 				break;
@@ -271,8 +273,14 @@ void CHelloAppDlg::OnTrayContextMenu()
 
 	{
 		char message[256];
-		snprintf(message, sizeof(message), "%s listening &thread", m_stop ? "Stop" : "Start");
+		snprintf(message, sizeof(message), "%s listening &thread", m_stopped_record ? "Start" : "Stop");
 		menu.AppendMenu(MF_STRING, ID_EV_TOGGLE_RECORD, message);
+	}
+
+	{
+		char message[256];
+		snprintf(message, sizeof(message), "%s loop &thread", m_stopped_loop ? "Start" : "Stop");
+		menu.AppendMenu(MF_STRING, ID_EV_TOGGLE_LOOP, message);
 	}
 
 	CMenu* chmenu = new CMenu;
@@ -319,7 +327,7 @@ void CHelloAppDlg::SendStaticDataSample()
 #if ENABLE_DRIVER_POOLING
 	char message[256];
 	char* buffer = "Ana are mere";
-	bool status = m_driver->send_data(buffer, strlen(buffer));
+	bool status = m_driver->send_data(buffer, strlen(buffer) + 1); // also the null character
 
 	snprintf(message, sizeof(message), "Sent: [%s] [%d] status:[%d]", buffer, strlen(buffer), status);
 	::MessageBox (NULL, message, _T("Send"), MB_OK);
@@ -339,7 +347,7 @@ void CHelloAppDlg::RetrieveStaticDataSample()
 #endif
 }
 
-void CHelloAppDlg::capture_audio()
+void CHelloAppDlg::CaptureAudio()
 {
 	char dataBuffer[4 * 1024]; // TODO: must love them magic numbers
 	BYTE waveFormat[128];  // WAVEFORMATEX*
@@ -349,7 +357,7 @@ void CHelloAppDlg::capture_audio()
 
 	DataFile file("fisier.wav", (WAVEFORMATEX*)waveFormat);
 
-	while(!m_stop) {
+	while(!m_stopped_record) {
 		int dataRead = m_driver->retrieve_speaker_data(dataBuffer, sizeof(dataBuffer));
 		if (dataRead) {
 			file.write_data(dataBuffer, dataRead);
@@ -361,20 +369,72 @@ void CHelloAppDlg::capture_audio()
 void CHelloAppDlg::ToggleRecord() 
 {
 #if ENABLE_DRIVER_POOLING
-	if (m_stop) {
-		m_stop = false;
-		m_thread = std::thread(std::bind(&CHelloAppDlg::capture_audio, this));
+	if (m_stopped_record) {
+		StopLoop();
 
-		::MessageBox(NULL, _T("Listening thread started"), _T("HelloApp"), MB_OK);
+		m_stopped_record = false;
+		m_thread_record = std::thread(std::bind(&CHelloAppDlg::CaptureAudio, this));
+
+		//::MessageBox(NULL, _T("Listening thread started"), _T("HelloApp"), MB_OK);
 	}
 	else {
-		m_stop = true;
-
-		if (m_thread.joinable()) {
-			m_thread.join();
-		}
-
-		::MessageBox(NULL, _T("Listening thread stopped"), _T("HelloApp"), MB_OK);
+		StopRecord();
+		//::MessageBox(NULL, _T("Listening thread stopped"), _T("HelloApp"), MB_OK);
 	}
 #endif
+}
+
+void CHelloAppDlg::LoopAudio()
+{
+	bool sendMicData = false;
+	char micBuffer[8 * 1024];
+	DWORD micBufferOffset = 0;
+
+	while (!m_stopped_loop) {
+		micBufferOffset += m_driver->retrieve_speaker_data(micBuffer + micBufferOffset, sizeof(micBuffer) / 2);
+
+		// => 5ms delay
+		if (sendMicData && micBufferOffset > 0) {
+			m_driver->send_mic_data(micBuffer, micBufferOffset);
+			micBufferOffset = 0;
+		}
+
+		sendMicData = !sendMicData;
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	}
+}
+
+void CHelloAppDlg::ToggleLoop()
+{
+#if ENABLE_DRIVER_POOLING
+	if (m_stopped_loop) {
+		StopRecord();
+
+		m_stopped_loop = false;
+		m_thread_record = std::thread(std::bind(&CHelloAppDlg::LoopAudio, this));
+
+		//::MessageBox(NULL, _T("Loop thread started"), _T("HelloApp"), MB_OK);
+	}
+	else {
+		StopLoop();
+		//::MessageBox(NULL, _T("Loop thread stopped"), _T("HelloApp"), MB_OK);
+	}
+#endif
+}
+
+void CHelloAppDlg::StopRecord()
+{
+	m_stopped_record = true;
+	if (m_thread_record.joinable()) {
+		m_thread_record.join();
+	}
+}
+
+void CHelloAppDlg::StopLoop()
+{
+	m_stopped_loop = true;
+	if (m_thread_loop.joinable()) {
+		m_thread_loop.join();
+	}
 }

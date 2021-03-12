@@ -174,6 +174,11 @@ extern ULONGLONG g_SpeakerLastReadPosition;
 extern BYTE*     g_SpeakerBuffer;
 extern ULONG     g_SpeakerBufferSize;
 
+extern ULONGLONG  g_MicrophoneCurrentPosition;
+extern ULONGLONG  g_MicrophoneLastReadPosition;
+extern BYTE*      g_MicrophoneBuffer;
+extern ULONG      g_MicrophoneBufferSize;
+
 extern BYTE g_SpeakerWaveFormat[128];
 
 

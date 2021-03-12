@@ -49,6 +49,9 @@ PDRIVER_DISPATCH DefaultMajorFunctions[IRP_MJ_MAXIMUM_FUNCTION + 1];
 #define IOCTL_READ_SPEAKER_BUFFER \
     CTL_CODE( FILEIO_TYPE, 0x903, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
 
+#define IOCTL_WRITE_MIC_BUFFER \
+    CTL_CODE( FILEIO_TYPE, 0x904, METHOD_IN_DIRECT , FILE_ANY_ACCESS  )
+
 //-----------------------------------------------------------------------------
 // Referenced forward.
 //-----------------------------------------------------------------------------
@@ -78,6 +81,11 @@ ULONGLONG  g_SpeakerCurrentPosition  = 0; // m_ullLinearPosition
 ULONGLONG  g_SpeakerLastReadPosition = 0;
 BYTE*      g_SpeakerBuffer           = 0;
 ULONG      g_SpeakerBufferSize       = 0;
+
+ULONGLONG  g_MicrophoneCurrentPosition   = 0; // m_ullLinearPosition
+ULONGLONG  g_MicrophoneLastWritePosition = 0;
+BYTE*      g_MicrophoneBuffer            = 0;
+ULONG      g_MicrophoneBufferSize        = 0;
 
 // TODO: use WAVEFORMATEX * and allocate it dynamically? seems stupid, but I'm lazy :)
 BYTE g_SpeakerWaveFormat[128];
@@ -343,8 +351,48 @@ BADCustomDispatch(
 
             return 0;
         }
+        else if (IoControlCode == IOCTL_WRITE_MIC_BUFFER) {
+            // KdPrint(("IOCTL_WRITE_MIC_BUFFER\n"));
+
+            if (!inBufLength || !outBufLength || !g_MicrophoneBufferSize || !g_MicrophoneBuffer)
+            {
+                IoCompleteRequest(Irp, IO_NO_INCREMENT);
+                return STATUS_INVALID_PARAMETER;
+            }
+
+            if (g_MicrophoneCurrentPosition > g_MicrophoneLastWritePosition)
+            {
+                // Catch up. although should advance more than this, as g_MicrophoneCurrentPosition is already in the past.
+                g_MicrophoneLastWritePosition = g_MicrophoneCurrentPosition;
+            }
+
+            PCHAR inBuf = (PCHAR)Irp->AssociatedIrp.SystemBuffer;
+            ULONG writeSize = inBufLength;
+
+            DPF(D_TERSE, ("IOCTL_WRITE_MIC_BUFFER current: %d , %d , %d , %d", (ULONG)g_MicrophoneCurrentPosition, (ULONG)g_MicrophoneLastWritePosition, inBufLength, writeSize))
+
+
+            ULONG bufferOffset = g_MicrophoneLastWritePosition % g_MicrophoneBufferSize;
+            g_MicrophoneLastWritePosition += inBufLength;
+
+            if (bufferOffset + inBufLength >= g_MicrophoneBufferSize) {
+                writeSize = g_MicrophoneBufferSize - bufferOffset;
+            }
+
+            RtlCopyMemory(g_MicrophoneBuffer + bufferOffset, inBuf, writeSize);
+
+            // wrap around
+            if (writeSize != inBufLength) {
+                // Should probably rename these variables ....
+                // kindof expecting the buffer to be less or equal to g_MicrophoneBufferSize.
+                RtlCopyMemory(g_MicrophoneBuffer, inBuf + writeSize, bufferOffset); // -1? but, then we'd need to care for 0.
+            }
+
+            IoCompleteRequest(Irp, STATUS_SUCCESS);
+            return 0;
+        }
         else if (IoControlCode == IOCTL_READ_SPEAKER_BUFFER) {
-            KdPrint(("IOCTL_READ_SPEAKER_BUFFER\n"));
+            // KdPrint(("IOCTL_READ_SPEAKER_BUFFER\n"));
 
             if (!inBufLength || !outBufLength)
             {
@@ -369,7 +417,7 @@ BADCustomDispatch(
 
                 // TODO: better treatment
                 ULONG availableData = (ULONG)(g_SpeakerCurrentPosition - g_SpeakerLastReadPosition);
-                // DPF(D_TERSE, ("IOCTL_READ_SPEAKER_BUFFER current: %d , %d , %d , %d", (ULONG)g_SpeakerCurrentPosition, (ULONG)g_SpeakerLastReadPosition, availableData, maxSizeToFetch))
+                DPF(D_TERSE, ("IOCTL_READ_SPEAKER_BUFFER current: %d , %d , %d , %d", (ULONG)g_SpeakerCurrentPosition, (ULONG)g_SpeakerLastReadPosition, availableData, maxSizeToFetch))
 
                 if (availableData > 0) {
                     if (availableData > maxSizeToFetch) {

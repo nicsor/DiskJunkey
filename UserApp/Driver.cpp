@@ -44,6 +44,9 @@ _Analysis_mode_(_Analysis_code_type_user_code_)
 #define IOCTL_READ_SPEAKER_BUFFER \
     CTL_CODE( FILEIO_TYPE, 0x903, METHOD_OUT_DIRECT , FILE_ANY_ACCESS  )
 
+#define IOCTL_WRITE_MIC_BUFFER \
+    CTL_CODE( FILEIO_TYPE, 0x904, METHOD_IN_DIRECT , FILE_ANY_ACCESS  )
+
 
 // =======================================================================
 // =======================================================================
@@ -133,23 +136,33 @@ Driver::~Driver()
     CloseHandle(m_microphone);
 }
 
-bool Driver::send_data(char* buffer, DWORD length)
+bool Driver::send_something(DWORD ioctl, char* buffer, DWORD length)
 {
     char outBuffer[1] = { 0 };
     bool status;
     ULONG bytesReturned;
 
     status = DeviceIoControl(m_microphone,
-        (DWORD)IOCTL_NONPNP_METHOD_IN_DIRECT,
+        (DWORD)ioctl,
         buffer,
-        (DWORD)length + 1,
+        (DWORD)length,
         outBuffer,
         sizeof(outBuffer),
         &bytesReturned,
         NULL
     );
 
-	return status;
+    return status;
+}
+
+bool Driver::send_data(char* buffer, DWORD length)
+{
+    return send_something((DWORD)IOCTL_NONPNP_METHOD_IN_DIRECT, buffer, length);
+}
+
+bool Driver::send_mic_data(char* buffer, DWORD length)
+{
+    return send_something((DWORD)IOCTL_WRITE_MIC_BUFFER, buffer, length);
 }
 
 DWORD Driver::retrieve_something(DWORD ioctl, void* buffer, DWORD length)
