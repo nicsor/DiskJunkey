@@ -9,6 +9,9 @@
 #define IDR_MENU1                       129
 #define IDR_MENUIMAGES                  130
 #define IDC_HIDE                        1000
+#define IDC_TOGGLE_RECORD               1001
+#define IDC_BUTTON2                     1002
+#define IDC_TOGGLE_LOOP                 1002
 #define ID_APP_OPEN                     32771
 #define ID_ITEM1                        32773
 #define ID_ITEM2                        32774
@@ -21,7 +24,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        132
 #define _APS_NEXT_COMMAND_VALUE         32777
-#define _APS_NEXT_CONTROL_VALUE         1001
+#define _APS_NEXT_CONTROL_VALUE         1003
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

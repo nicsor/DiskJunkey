@@ -13,8 +13,7 @@ char* superbuffer[1024 * 1024] = {0};
 int superbufferoffset = 0;
 
 DataFile::DataFile(const char* filename, PWAVEFORMATEX waveFormat)
-:  m_waveFormat(waveFormat),// TODO use shared pointer or copy the data ... cause it will fail with the next changes
-   m_file(filename, std::ios::out | std::ios::binary)
+:  m_file(filename, std::ios::out | std::ios::binary)
 {
     m_FileHeader.dwRiff           = RIFF_TAG;
     m_FileHeader.dwFileSize       = 0;
@@ -27,12 +26,13 @@ DataFile::DataFile(const char* filename, PWAVEFORMATEX waveFormat)
 
     // Write the file header
     {
-        m_FileHeader.dwFormatLength = (m_waveFormat->wFormatTag == WAVE_FORMAT_PCM) ?
+        m_FileHeader.dwFormatLength = (waveFormat->wFormatTag == WAVE_FORMAT_PCM) ?
             sizeof(PCMWAVEFORMAT) :
-            sizeof(WAVEFORMATEX) + m_waveFormat->cbSize;
+            sizeof(WAVEFORMATEX) + waveFormat->cbSize;
 
         m_file.write((char*)&m_FileHeader, sizeof(m_FileHeader));
-        m_file.write((char*)m_waveFormat, m_FileHeader.dwFormatLength);
+        m_file.write((char*)waveFormat, m_FileHeader.dwFormatLength);
+        m_dataOffset = m_file.tellp();
         m_file.write((char*)&m_DataHeader, sizeof(m_DataHeader));
     }
 
@@ -51,7 +51,8 @@ DataFile::~DataFile()
     // update file header
     m_file.seekp(0);
     m_file.write((char*)&m_FileHeader, sizeof(m_FileHeader));
-    m_file.write((char*)m_waveFormat, m_FileHeader.dwFormatLength);
+    //m_file.write((char*)m_waveFormat, m_FileHeader.dwFormatLength);
+    m_file.seekp(m_dataOffset);    
     m_file.write((char*)&m_DataHeader, sizeof(m_DataHeader));
     m_file.seekp(fileSize);
     

@@ -66,9 +66,9 @@ class DataFile
 {
 protected:
     OUTPUT_FILE_HEADER          m_FileHeader;
-    PWAVEFORMATEX               m_waveFormat;
     OUTPUT_DATA_HEADER          m_DataHeader;
     std::ofstream               m_file;
+    ULONG                       m_dataOffset;
 
 public:
     DataFile(const char* filename, PWAVEFORMATEX waveFormat);

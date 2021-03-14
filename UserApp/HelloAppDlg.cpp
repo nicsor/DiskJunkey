@@ -162,6 +162,9 @@ void CHelloAppDlg::OnClose()
 
 void CHelloAppDlg::OnPaint()
 {
+	const ULONG paddingRight = 10;
+	const ULONG paddingBottom = 50;
+
 	CWnd::ModifyStyle(WS_SYSMENU | WS_CAPTION, 0);
 
 	// Get this window's area
@@ -172,7 +175,7 @@ void CHelloAppDlg::OnPaint()
 	GetDesktopWindow()->GetClientRect(&desktopInfo);
 
 	// Redraw the window in the right corner
-	SetWindowPos(NULL, desktopInfo.Width() - dialogInfo.Width(), desktopInfo.Height() - dialogInfo.Height(), -1, -1,
+	SetWindowPos(NULL, desktopInfo.Width() - dialogInfo.Width()- paddingRight, desktopInfo.Height() - dialogInfo.Height()- paddingBottom, -1, -1,
 		SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 
 	CDialog::OnPaint();
@@ -216,9 +219,11 @@ BOOL CHelloAppDlg::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERINF
 			case(ID_EV_RETRIEVE_DATA):
 				RetrieveStaticDataSample();
 				break;
+			case(IDC_TOGGLE_RECORD):
 			case(ID_EV_TOGGLE_RECORD):
 				ToggleRecord();
 				break;
+			case(IDC_TOGGLE_LOOP):
 			case(ID_EV_TOGGLE_LOOP):
 				ToggleLoop();
 				break;

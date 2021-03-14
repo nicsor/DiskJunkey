@@ -75,13 +75,15 @@ IDR_MAINFRAME           ICON                    "res\\HelloApp.ico"
 // Dialog
 //
 
-IDD_HELLOAPP_DIALOG DIALOGEX 0, 0, 143, 95
+IDD_HELLOAPP_DIALOG DIALOGEX 0, 0, 143, 88
 STYLE DS_SYSMODAL | DS_SETFONT | WS_VISIBLE
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Exit",IDOK,7,7,129,14
-    LTEXT           "Simple demo app.\nAll actions are implemented in the tray.",IDCANCEL,7,46,122,42
-    PUSHBUTTON      "Hide",IDC_HIDE,7,26,129,14
+    DEFPUSHBUTTON   "Exit",IDOK,7,7,129,12
+    LTEXT           "Simple demo app.\nAll actions are implemented in the tray.",IDCANCEL,7,59,122,22
+    PUSHBUTTON      "Hide",IDC_HIDE,7,18,129,11
+    PUSHBUTTON      "Toggle record",IDC_TOGGLE_RECORD,7,29,129,13
+    PUSHBUTTON      "Toggle loop",IDC_TOGGLE_LOOP,7,42,129,12
 END
 
 
@@ -136,7 +138,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 136
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 81
     END
 END
 #endif    // APSTUDIO_INVOKED
