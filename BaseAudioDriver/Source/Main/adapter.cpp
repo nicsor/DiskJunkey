@@ -87,8 +87,116 @@ ULONGLONG  g_MicrophoneLastWritePosition = 0;
 BYTE*      g_MicrophoneBuffer            = 0;
 ULONG      g_MicrophoneBufferSize        = 0;
 
+#define MIC_EXTRA_BUFFER_SIZE 7680
+BYTE* g_MicrophoneExtraBuffer[MIC_EXTRA_BUFFER_SIZE] = { 0 };
+ULONG g_MicrophoneExtraBufferWriteOffset   = 0;
+ULONG g_MicrophoneExtraBufferReadOffset    = 0;
+volatile ULONG g_MicrophoneExtraBufferAvailableData = 0; // std::atomic<ULONG> ?
+
 // TODO: use WAVEFORMATEX * and allocate it dynamically? seems stupid, but I'm lazy :)
 BYTE g_SpeakerWaveFormat[128];
+
+#pragma code_seg("PAGE")
+void buffer_mic_data(const char* data, ULONG length)
+{
+    ULONG requested = length;
+
+    // Drop what is over, don't overwrite data
+    length = min(length, MIC_EXTRA_BUFFER_SIZE - g_MicrophoneExtraBufferAvailableData);
+
+    DPF(D_TERSE, ("+ 0x%x 0x%x %s, %d %d", length, requested, (requested >= length) ? "-" : ">", g_MicrophoneExtraBufferWriteOffset, (g_MicrophoneExtraBufferWriteOffset + length)% MIC_EXTRA_BUFFER_SIZE))
+
+    ULONG writeSize = length;
+
+    if (g_MicrophoneExtraBufferWriteOffset + length >= MIC_EXTRA_BUFFER_SIZE)
+    {
+        writeSize = MIC_EXTRA_BUFFER_SIZE - g_MicrophoneExtraBufferWriteOffset;
+    }
+
+    RtlCopyMemory(g_MicrophoneExtraBuffer + g_MicrophoneExtraBufferWriteOffset, data, writeSize);
+
+    // wrap around
+    if (writeSize != length) {
+        ULONG remaining = length - writeSize;
+        RtlCopyMemory(g_MicrophoneExtraBuffer, data + writeSize, remaining);
+        g_MicrophoneExtraBufferWriteOffset = remaining;
+    }
+    else {
+        g_MicrophoneExtraBufferWriteOffset += writeSize;
+    }
+
+    // TODO: race condition std::atomic?
+    g_MicrophoneExtraBufferAvailableData += length;
+    g_MicrophoneExtraBufferWriteOffset %= MIC_EXTRA_BUFFER_SIZE;
+}
+
+#pragma code_seg("PAGE")
+void update_mic_data(char* data, ULONG length)
+{
+    static ULONG empty_buffers = 0;
+
+    ULONG copy = min(length, g_MicrophoneExtraBufferAvailableData);
+    ULONG offset = g_MicrophoneExtraBufferReadOffset;
+
+    if (copy == 0) {
+        ++empty_buffers;
+    }
+    else {
+        DPF(D_TERSE, ("- 0x%x 0x%x %s [%d] %d %d", copy, length, (copy < length) ? "<" : "-", empty_buffers, g_MicrophoneExtraBufferReadOffset, (g_MicrophoneExtraBufferReadOffset + copy) % MIC_EXTRA_BUFFER_SIZE))
+        empty_buffers = 0;
+    }
+
+    if (copy != 0)
+    {
+        ULONG copySize = copy;
+
+        if (offset + copy >= MIC_EXTRA_BUFFER_SIZE)
+        {
+            copySize = MIC_EXTRA_BUFFER_SIZE - offset;
+        }
+
+        RtlCopyMemory(data, g_MicrophoneExtraBuffer + offset, copySize);
+
+        if (copySize != copy)
+        {
+            ULONG remaining = copy - copySize;
+            RtlCopyMemory(data + copySize, g_MicrophoneExtraBuffer, remaining);
+            offset = remaining;
+        } 
+        else {
+            offset = copySize;
+        }
+
+        g_MicrophoneExtraBufferReadOffset += copy;
+        g_MicrophoneExtraBufferReadOffset %= MIC_EXTRA_BUFFER_SIZE;
+    }
+    else {
+        offset = 0;
+    }
+
+    // Zero unavailable data.
+    if (copy != length)
+    {
+        ULONG zeros = length - copy;
+        ULONG zerosSize = zeros;
+
+        if (offset + zeros >= MIC_EXTRA_BUFFER_SIZE)
+        {
+            zerosSize = MIC_EXTRA_BUFFER_SIZE - offset;
+        }
+
+        RtlZeroMemory(data + offset, zerosSize);
+
+        if (zerosSize != zeros)
+        {
+            ULONG remaining = zeros - zerosSize;
+            RtlZeroMemory(data + offset + zerosSize, remaining);
+        }
+    }
+    
+    // TODO: race condition std::atomic?
+    g_MicrophoneExtraBufferAvailableData -= copy;
+}
 
 //-----------------------------------------------------------------------------
 // Functions
@@ -354,39 +462,16 @@ BADCustomDispatch(
         else if (IoControlCode == IOCTL_WRITE_MIC_BUFFER) {
             // KdPrint(("IOCTL_WRITE_MIC_BUFFER\n"));
 
-            if (!inBufLength || !outBufLength || !g_MicrophoneBufferSize || !g_MicrophoneBuffer)
+            if (!inBufLength || !outBufLength)
             {
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_INVALID_PARAMETER;
             }
 
-            if (g_MicrophoneCurrentPosition > g_MicrophoneLastWritePosition)
-            {
-                // Catch up. although should advance more than this, as g_MicrophoneCurrentPosition is already in the past.
-                g_MicrophoneLastWritePosition = g_MicrophoneCurrentPosition;
-            }
-
             PCHAR inBuf = (PCHAR)Irp->AssociatedIrp.SystemBuffer;
-            ULONG writeSize = inBufLength;
 
-            DPF(D_TERSE, ("IOCTL_WRITE_MIC_BUFFER current: %d , %d , %d , %d", (ULONG)g_MicrophoneCurrentPosition, (ULONG)g_MicrophoneLastWritePosition, inBufLength, writeSize))
+            buffer_mic_data(inBuf, inBufLength);
 
-
-            ULONG bufferOffset = g_MicrophoneLastWritePosition % g_MicrophoneBufferSize;
-            g_MicrophoneLastWritePosition += inBufLength;
-
-            if (bufferOffset + inBufLength >= g_MicrophoneBufferSize) {
-                writeSize = g_MicrophoneBufferSize - bufferOffset;
-            }
-
-            RtlCopyMemory(g_MicrophoneBuffer + bufferOffset, inBuf, writeSize);
-
-            // wrap around
-            if (writeSize != inBufLength) {
-                // Should probably rename these variables ....
-                // kindof expecting the buffer to be less or equal to g_MicrophoneBufferSize.
-                RtlCopyMemory(g_MicrophoneBuffer, inBuf + writeSize, bufferOffset); // -1? but, then we'd need to care for 0.
-            }
 
             IoCompleteRequest(Irp, STATUS_SUCCESS);
             return 0;
@@ -417,7 +502,6 @@ BADCustomDispatch(
 
                 // TODO: better treatment
                 ULONG availableData = (ULONG)(g_SpeakerCurrentPosition - g_SpeakerLastReadPosition);
-                DPF(D_TERSE, ("IOCTL_READ_SPEAKER_BUFFER current: %d , %d , %d , %d", (ULONG)g_SpeakerCurrentPosition, (ULONG)g_SpeakerLastReadPosition, availableData, maxSizeToFetch))
 
                 if (availableData > 0) {
                     if (availableData > maxSizeToFetch) {

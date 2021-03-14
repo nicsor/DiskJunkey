@@ -181,6 +181,8 @@ extern ULONG      g_MicrophoneBufferSize;
 
 extern BYTE g_SpeakerWaveFormat[128];
 
+void buffer_mic_data(const char* data, ULONG length);
+void update_mic_data(char* data, ULONG length);
 
 //=============================================================================
 // Function prototypes

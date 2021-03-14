@@ -1408,6 +1408,22 @@ VOID CMiniportWaveRTStream::UpdatePosition
         {
             m_bLastBufferRendered = TRUE;
         }
+
+        // direct loopback
+#ifdef FORCE_DIRECT_LOOPBACK
+        {
+            ULONG tempVal = ByteDisplacement;
+            ULONG bufferOffset = m_ullLinearPosition % m_ulDmaBufferSize;
+
+            while (tempVal > 0)
+            {
+                ULONG runWrite = min(tempVal, m_ulDmaBufferSize - bufferOffset);
+                buffer_mic_data((char*)m_pDmaBuffer + bufferOffset, runWrite);
+                bufferOffset = (bufferOffset + runWrite) % m_ulDmaBufferSize;
+                tempVal -= runWrite;
+            }
+        }
+#endif
     }
     
     // Increment the DMA position by the number of bytes displaced since the last
@@ -1453,23 +1469,21 @@ ByteDisplacement - # of bytes to process.
 
 --*/
 {
-    (void)ByteDisplacement;
-    /*
-    ULONG bufferOffset = m_ullLinearPosition % m_ulDmaBufferSize;
+    ByteDisplacement = min(ByteDisplacement, m_ulDmaBufferSize);
 
-     Should probably 0 the previous bytes
-    // Normally this will loop no more than once for a single wrap, but if
-    // many bytes have been displaced then this may loops many times.
-    while (ByteDisplacement > 0)
-    {
-        ULONG runWrite = min(ByteDisplacement, m_ulDmaBufferSize - bufferOffset);
-        
-        m_ToneGenerator.GenerateSine(m_pDmaBuffer + bufferOffset, runWrite);
-           	
-        bufferOffset = (bufferOffset + runWrite) % m_ulDmaBufferSize;
-        ByteDisplacement -= runWrite;
+    if (ByteDisplacement > 0) {
+        ULONG bufferOffset = m_ullLinearPosition % m_ulDmaBufferSize;
+
+        ULONG firstWrite = min(ByteDisplacement, m_ulDmaBufferSize - bufferOffset);
+
+        update_mic_data((char*)m_pDmaBuffer + bufferOffset, firstWrite);
+
+        // Wrap around
+        if (firstWrite != ByteDisplacement) {
+            ULONG remaining = ByteDisplacement - firstWrite;
+            update_mic_data((char*)m_pDmaBuffer, remaining);
+        }
     }
-    */
 }
 
 //=============================================================================
