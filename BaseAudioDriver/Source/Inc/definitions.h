@@ -169,20 +169,7 @@ extern DWORD g_DoNotCreateDataFiles;
 extern DWORD g_DisableBthScoBypass;
 extern UNICODE_STRING g_RegistryPath;
 
-extern ULONGLONG g_SpeakerCurrentPosition; // m_ullLinearPosition
-extern ULONGLONG g_SpeakerLastReadPosition;
-extern BYTE*     g_SpeakerBuffer;
-extern ULONG     g_SpeakerBufferSize;
-
-extern ULONGLONG  g_MicrophoneCurrentPosition;
-extern ULONGLONG  g_MicrophoneLastReadPosition;
-extern BYTE*      g_MicrophoneBuffer;
-extern ULONG      g_MicrophoneBufferSize;
-
 extern BYTE g_SpeakerWaveFormat[128];
-
-void buffer_mic_data(const char* data, ULONG length);
-void update_mic_data(char* data, ULONG length);
 
 //=============================================================================
 // Function prototypes

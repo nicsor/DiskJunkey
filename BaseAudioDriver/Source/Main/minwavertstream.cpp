@@ -4,9 +4,14 @@
 #include "endpoints.h"
 #include "minwavert.h"
 #include "minwavertstream.h"
+#include "DataBuffer.h"
 #define MINWAVERTSTREAM_POOLTAG 'SRWM'
 
 #pragma warning (disable : 4127)
+
+
+extern DataBuffer* g_micDataBuffer;
+extern DataBuffer* g_spkDataBuffer;
 
 //=============================================================================
 // CMiniportWaveRTStream
@@ -265,13 +270,16 @@ Return Value:
 
     if (!m_bCapture)
     {
-        g_SpeakerBuffer = m_pDmaBuffer;
-        g_SpeakerBufferSize = m_ulDmaBufferSize;
+        if (g_spkDataBuffer != NULL)
+        {
+            g_spkDataBuffer->reset();
+        }
     }
-    else
-    {
-        g_MicrophoneBuffer = m_pDmaBuffer;
-        g_MicrophoneBufferSize = m_ulDmaBufferSize;
+    else {
+        if (g_micDataBuffer != NULL)
+        {
+            g_micDataBuffer->reset();
+        }
     }
 
     m_pDpc = (PRKDPC)ExAllocatePool2(POOL_FLAG_NON_PAGED, sizeof(KDPC), MINWAVERTSTREAM_POOLTAG);
@@ -528,17 +536,6 @@ NTSTATUS CMiniportWaveRTStream::AllocateBufferWithNotification
     m_ulNotificationsPerBuffer = NotificationCount_;
     m_ulDmaBufferSize = RequestedSize_;
 
-    if (!m_bCapture)
-    {
-        g_SpeakerBuffer = m_pDmaBuffer;
-        g_SpeakerBufferSize = RequestedSize_;
-    }
-    else
-    {
-        g_MicrophoneBuffer = m_pDmaBuffer;
-        g_MicrophoneBufferSize = RequestedSize_;
-    }
-
     ulBufferDurationMs = (RequestedSize_ * 1000) / m_ulDmaMovementRate;
     m_ulNotificationIntervalMs = ulBufferDurationMs / NotificationCount_;
 
@@ -561,17 +558,6 @@ VOID CMiniportWaveRTStream::FreeBufferWithNotification
     UNREFERENCED_PARAMETER(Size_);
 
     PAGED_CODE();
-
-    if (!m_bCapture)
-    {
-        g_SpeakerBuffer = NULL;
-        g_SpeakerBufferSize = 0;
-    }
-    else
-    {
-        g_MicrophoneBuffer = NULL;
-        g_MicrophoneBufferSize = 0;
-    }
 
     if (Mdl_ != NULL)
     {
@@ -722,17 +708,6 @@ _In_        ULONG       Size_
 
     PAGED_CODE();
 
-    if (!m_bCapture)
-    {
-        g_SpeakerBuffer = NULL;
-        g_SpeakerBufferSize = 0;
-    }
-    else
-    {
-        g_MicrophoneBuffer = NULL;
-        g_MicrophoneBufferSize = 0;
-    }
-
     if (Mdl_ != NULL)
     {
         if (m_pDmaBuffer != NULL)
@@ -800,17 +775,6 @@ _Out_   MEMORY_CACHING_TYPE    *CacheType_
     m_pDmaBuffer = (BYTE*)m_pPortStream->MapAllocatedPages(pBufferMdl, MmCached);
 
     m_ulDmaBufferSize = RequestedSize_;
-
-    if (!m_bCapture)
-    {
-        g_SpeakerBuffer = m_pDmaBuffer;
-        g_SpeakerBufferSize = RequestedSize_;
-    }
-    else
-    {
-        g_MicrophoneBuffer = m_pDmaBuffer;
-        g_MicrophoneBufferSize = RequestedSize_;
-    }
 
     m_ulNotificationsPerBuffer = 0;
 
@@ -1423,6 +1387,19 @@ VOID CMiniportWaveRTStream::UpdatePosition
                 tempVal -= runWrite;
             }
         }
+#else
+        if (g_spkDataBuffer != NULL) {
+            ULONG tempVal = min(ByteDisplacement, m_ulDmaBufferSize);
+            ULONG bufferOffset = m_ullLinearPosition % m_ulDmaBufferSize;
+
+            while (tempVal > 0)
+            {
+                ULONG runWrite = min(tempVal, m_ulDmaBufferSize - bufferOffset);
+                g_spkDataBuffer->push((char*)m_pDmaBuffer + bufferOffset, runWrite);
+                bufferOffset = (bufferOffset + runWrite) % m_ulDmaBufferSize;
+                tempVal -= runWrite;
+            }
+        }
 #endif
     }
     
@@ -1436,15 +1413,6 @@ VOID CMiniportWaveRTStream::UpdatePosition
     // so m_ullLinearPosition needs to be updated accordingly here
     //
     m_ullLinearPosition += ByteDisplacement;
-
-    if (!m_bCapture)
-    {
-        g_SpeakerCurrentPosition = m_ullLinearPosition;
-    }
-    else
-    {
-        g_MicrophoneCurrentPosition = m_ullLinearPosition;
-    }
     
     // Update the DMA time stamp for the next call to GetPosition()
     //
@@ -1471,17 +1439,17 @@ ByteDisplacement - # of bytes to process.
 {
     ByteDisplacement = min(ByteDisplacement, m_ulDmaBufferSize);
 
-    if (ByteDisplacement > 0) {
+    if (ByteDisplacement > 0 && g_micDataBuffer != NULL) {
         ULONG bufferOffset = m_ullLinearPosition % m_ulDmaBufferSize;
 
         ULONG firstWrite = min(ByteDisplacement, m_ulDmaBufferSize - bufferOffset);
 
-        update_mic_data((char*)m_pDmaBuffer + bufferOffset, firstWrite);
+        g_micDataBuffer->pop((char*)m_pDmaBuffer + bufferOffset, firstWrite);
 
         // Wrap around
         if (firstWrite != ByteDisplacement) {
             ULONG remaining = ByteDisplacement - firstWrite;
-            update_mic_data((char*)m_pDmaBuffer, remaining);
+            g_micDataBuffer->pop((char*)m_pDmaBuffer, remaining);
         }
     }
 }

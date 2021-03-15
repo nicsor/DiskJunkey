@@ -23,6 +23,8 @@ Abstract:
 #include "endpoints.h"
 #include "minipairs.h"
 
+#include "DataBuffer.h"
+
 typedef void (*fnPcDriverUnload) (PDRIVER_OBJECT);
 fnPcDriverUnload gPCDriverUnloadRoutine = NULL;
 extern "C" DRIVER_UNLOAD DriverUnload;
@@ -77,126 +79,11 @@ DWORD g_DoNotCreateDataFiles = 0;  // default is off.
 DWORD g_DisableToneGenerator = 0;  // default is to generate tones.
 UNICODE_STRING g_RegistryPath;      // This is used to store the registry settings path for the driver
 
-ULONGLONG  g_SpeakerCurrentPosition  = 0; // m_ullLinearPosition
-ULONGLONG  g_SpeakerLastReadPosition = 0;
-BYTE*      g_SpeakerBuffer           = 0;
-ULONG      g_SpeakerBufferSize       = 0;
-
-ULONGLONG  g_MicrophoneCurrentPosition   = 0; // m_ullLinearPosition
-ULONGLONG  g_MicrophoneLastWritePosition = 0;
-BYTE*      g_MicrophoneBuffer            = 0;
-ULONG      g_MicrophoneBufferSize        = 0;
-
-#define MIC_EXTRA_BUFFER_SIZE 7680
-BYTE* g_MicrophoneExtraBuffer[MIC_EXTRA_BUFFER_SIZE] = { 0 };
-ULONG g_MicrophoneExtraBufferWriteOffset   = 0;
-ULONG g_MicrophoneExtraBufferReadOffset    = 0;
-volatile ULONG g_MicrophoneExtraBufferAvailableData = 0; // std::atomic<ULONG> ?
-
 // TODO: use WAVEFORMATEX * and allocate it dynamically? seems stupid, but I'm lazy :)
 BYTE g_SpeakerWaveFormat[128];
 
-#pragma code_seg("PAGE")
-void buffer_mic_data(const char* data, ULONG length)
-{
-    ULONG requested = length;
-
-    // Drop what is over, don't overwrite data
-    length = min(length, MIC_EXTRA_BUFFER_SIZE - g_MicrophoneExtraBufferAvailableData);
-
-    DPF(D_TERSE, ("+ 0x%x 0x%x %s, %d %d", length, requested, (requested >= length) ? "-" : ">", g_MicrophoneExtraBufferWriteOffset, (g_MicrophoneExtraBufferWriteOffset + length)% MIC_EXTRA_BUFFER_SIZE))
-
-    ULONG writeSize = length;
-
-    if (g_MicrophoneExtraBufferWriteOffset + length >= MIC_EXTRA_BUFFER_SIZE)
-    {
-        writeSize = MIC_EXTRA_BUFFER_SIZE - g_MicrophoneExtraBufferWriteOffset;
-    }
-
-    RtlCopyMemory(g_MicrophoneExtraBuffer + g_MicrophoneExtraBufferWriteOffset, data, writeSize);
-
-    // wrap around
-    if (writeSize != length) {
-        ULONG remaining = length - writeSize;
-        RtlCopyMemory(g_MicrophoneExtraBuffer, data + writeSize, remaining);
-        g_MicrophoneExtraBufferWriteOffset = remaining;
-    }
-    else {
-        g_MicrophoneExtraBufferWriteOffset += writeSize;
-    }
-
-    // TODO: race condition std::atomic?
-    g_MicrophoneExtraBufferAvailableData += length;
-    g_MicrophoneExtraBufferWriteOffset %= MIC_EXTRA_BUFFER_SIZE;
-}
-
-#pragma code_seg("PAGE")
-void update_mic_data(char* data, ULONG length)
-{
-    static ULONG empty_buffers = 0;
-
-    ULONG copy = min(length, g_MicrophoneExtraBufferAvailableData);
-    ULONG offset = g_MicrophoneExtraBufferReadOffset;
-
-    if (copy == 0) {
-        ++empty_buffers;
-    }
-    else {
-        DPF(D_TERSE, ("- 0x%x 0x%x %s [%d] %d %d", copy, length, (copy < length) ? "<" : "-", empty_buffers, g_MicrophoneExtraBufferReadOffset, (g_MicrophoneExtraBufferReadOffset + copy) % MIC_EXTRA_BUFFER_SIZE))
-        empty_buffers = 0;
-    }
-
-    if (copy != 0)
-    {
-        ULONG copySize = copy;
-
-        if (offset + copy >= MIC_EXTRA_BUFFER_SIZE)
-        {
-            copySize = MIC_EXTRA_BUFFER_SIZE - offset;
-        }
-
-        RtlCopyMemory(data, g_MicrophoneExtraBuffer + offset, copySize);
-
-        if (copySize != copy)
-        {
-            ULONG remaining = copy - copySize;
-            RtlCopyMemory(data + copySize, g_MicrophoneExtraBuffer, remaining);
-            offset = remaining;
-        } 
-        else {
-            offset = copySize;
-        }
-
-        g_MicrophoneExtraBufferReadOffset += copy;
-        g_MicrophoneExtraBufferReadOffset %= MIC_EXTRA_BUFFER_SIZE;
-    }
-    else {
-        offset = 0;
-    }
-
-    // Zero unavailable data.
-    if (copy != length)
-    {
-        ULONG zeros = length - copy;
-        ULONG zerosSize = zeros;
-
-        if (offset + zeros >= MIC_EXTRA_BUFFER_SIZE)
-        {
-            zerosSize = MIC_EXTRA_BUFFER_SIZE - offset;
-        }
-
-        RtlZeroMemory(data + offset, zerosSize);
-
-        if (zerosSize != zeros)
-        {
-            ULONG remaining = zeros - zerosSize;
-            RtlZeroMemory(data + offset + zerosSize, remaining);
-        }
-    }
-    
-    // TODO: race condition std::atomic?
-    g_MicrophoneExtraBufferAvailableData -= copy;
-}
+DataBuffer *g_micDataBuffer;
+DataBuffer *g_spkDataBuffer;
 
 //-----------------------------------------------------------------------------
 // Functions
@@ -254,6 +141,19 @@ Environment:
     if (gPCDriverUnloadRoutine != NULL)
     {
         gPCDriverUnloadRoutine(DriverObject);
+    }
+
+
+    if (g_spkDataBuffer)
+    {
+        delete g_spkDataBuffer;
+        g_spkDataBuffer = NULL;
+    }
+
+    if (g_micDataBuffer)
+    {
+        delete g_micDataBuffer;
+        g_micDataBuffer = NULL;
     }
 
     //
@@ -462,7 +362,7 @@ BADCustomDispatch(
         else if (IoControlCode == IOCTL_WRITE_MIC_BUFFER) {
             // KdPrint(("IOCTL_WRITE_MIC_BUFFER\n"));
 
-            if (!inBufLength || !outBufLength)
+            if (!inBufLength || !outBufLength || g_micDataBuffer == NULL)
             {
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_INVALID_PARAMETER;
@@ -470,7 +370,7 @@ BADCustomDispatch(
 
             PCHAR inBuf = (PCHAR)Irp->AssociatedIrp.SystemBuffer;
 
-            buffer_mic_data(inBuf, inBufLength);
+            g_micDataBuffer->push(inBuf, inBufLength);
 
 
             IoCompleteRequest(Irp, STATUS_SUCCESS);
@@ -479,7 +379,7 @@ BADCustomDispatch(
         else if (IoControlCode == IOCTL_READ_SPEAKER_BUFFER) {
             // KdPrint(("IOCTL_READ_SPEAKER_BUFFER\n"));
 
-            if (!inBufLength || !outBufLength)
+            if (!inBufLength || !outBufLength || g_spkDataBuffer == NULL)
             {
                 IoCompleteRequest(Irp, IO_NO_INCREMENT);
                 return STATUS_INVALID_PARAMETER;
@@ -495,42 +395,7 @@ BADCustomDispatch(
                 return STATUS_INSUFFICIENT_RESOURCES;
             }
 
-            // Copy buffered data back to the application
-            if (g_SpeakerBufferSize>0 && g_SpeakerBuffer != NULL)
-            {
-                ULONG maxSizeToFetch = min(outBufLength, g_SpeakerBufferSize);
-
-                // TODO: better treatment
-                ULONG availableData = (ULONG)(g_SpeakerCurrentPosition - g_SpeakerLastReadPosition);
-
-                if (availableData > 0) {
-                    if (availableData > maxSizeToFetch) {
-                        // TODO: In practice we should drop a bit more than this, unless we copy to a separate buffer.
-                        // or make so that we send only the last N ms.
-                        g_SpeakerLastReadPosition += availableData - maxSizeToFetch;
-                        availableData = maxSizeToFetch;
-                    }
-
-                    ULONG bufferOffset = g_SpeakerLastReadPosition % g_SpeakerBufferSize;
-                    g_SpeakerLastReadPosition += availableData;
-
-
-                    ULONG writeSize = min(availableData, g_SpeakerBufferSize - bufferOffset);
-                    RtlCopyMemory(outBuf, g_SpeakerBuffer + bufferOffset, writeSize);
-
-                    // wrap around
-                    if (availableData != writeSize)
-                    {
-                        RtlCopyMemory(outBuf + writeSize, g_SpeakerBuffer, availableData - writeSize);
-                    }
-                }
-                else {
-                    // TODO: Don't think this will occur, but just in case.
-                    availableData = 0;
-                }
-
-                Irp->IoStatus.Information = availableData;
-            }
+            Irp->IoStatus.Information = g_spkDataBuffer->pop(outBuf, outBufLength);
 
             IoCompleteRequest(Irp, STATUS_SUCCESS);
 
@@ -679,6 +544,20 @@ Return Value:
     //
     gPCDriverUnloadRoutine = DriverObject->DriverUnload;
     DriverObject->DriverUnload = DriverUnload;
+
+
+    g_micDataBuffer = new (POOL_FLAG_NON_PAGED, MINWAVERT_POOLTAG) DataBuffer(15360);
+    if (NULL == g_micDataBuffer)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    g_spkDataBuffer = new (POOL_FLAG_NON_PAGED, MINWAVERT_POOLTAG) DataBuffer(15360);
+    if (NULL == g_spkDataBuffer)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
 
     //
     // All done.
