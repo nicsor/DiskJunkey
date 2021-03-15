@@ -44,7 +44,7 @@ unsigned int DataBuffer::push(const char* data, unsigned int length)
 
     unsigned int writeSize = length;
 
-    if (m_offset_write + length >= m_buffer_size)
+    if (m_offset_write + length > m_buffer_size)
     {
         writeSize = m_buffer_size - m_offset_write;
     }
@@ -73,7 +73,6 @@ unsigned int DataBuffer::pop(char* data, unsigned int length)
     static unsigned int empty_buffers = 0;
 
     unsigned int copy = min(length, m_available_data);
-    unsigned int offset = m_offset_read;
 
     if (copy == 0) {
         ++empty_buffers;
@@ -87,48 +86,28 @@ unsigned int DataBuffer::pop(char* data, unsigned int length)
     {
         unsigned int copySize = copy;
 
-        if (offset + copy >= m_buffer_size)
+        if (m_offset_read + copy > m_buffer_size)
         {
-            copySize = m_buffer_size - offset;
+            copySize = m_buffer_size - m_offset_read;
         }
 
-        RtlCopyMemory(data, m_buffer + offset, copySize);
+        RtlCopyMemory(data, m_buffer + m_offset_read, copySize);
 
         if (copySize != copy)
         {
             unsigned int remaining = copy - copySize;
             RtlCopyMemory(data + copySize, m_buffer, remaining);
-            offset = remaining;
-        }
-        else {
-            offset = copySize;
         }
 
         m_offset_read += copy;
         m_offset_read %= m_buffer_size;
-    }
-    else {
-        offset = 0;
     }
 
     // Zero unavailable data.
     if (copy != length)
     {
         unsigned int zeros = length - copy;
-        unsigned int zerosSize = zeros;
-
-        if (offset + zeros >= m_buffer_size)
-        {
-            zerosSize = m_buffer_size - offset;
-        }
-
-        RtlZeroMemory(data + offset, zerosSize);
-
-        if (zerosSize != zeros)
-        {
-            unsigned int remaining = zeros - zerosSize;
-            RtlZeroMemory(data + offset + zerosSize, remaining);
-        }
+        RtlZeroMemory(data + copy, zeros);
     }
 
     m_available_data -= copy;
