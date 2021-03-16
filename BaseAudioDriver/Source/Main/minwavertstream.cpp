@@ -105,53 +105,6 @@ Return Value:
     DPF_ENTER(("[CMiniportWaveRTStream::~CMiniportWaveRTStream]"));
 } // ~CMiniportWaveRTStream
 
-//=============================================================================
-#pragma code_seg("PAGE")
-
-NTSTATUS CMiniportWaveRTStream::ReadRegistrySettings()
-{
-    PAGED_CODE();
-
-    NTSTATUS                    ntStatus;
-    UNICODE_STRING              parametersPath;
-
-    RTL_QUERY_REGISTRY_TABLE    paramTable[] = {
-        // QueryRoutine     Flags                                               Name                            EntryContext                            DefaultType                                                     DefaultData                                 DefaultLength
-        { NULL,   RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK, L"HostCaptureToneFrequency",        &m_ulHostCaptureToneFrequency,          (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_DWORD,  &m_ulHostCaptureToneFrequency,              sizeof(DWORD) },
-        { NULL,   RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK, L"HostCaptureToneAmplitude",        &m_dwHostCaptureToneAmplitude,          (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_DWORD,  &m_dwHostCaptureToneAmplitude,              sizeof(DWORD) },
-        { NULL,   RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK, L"HostCaptureToneDCOffset",         &m_dwHostCaptureToneDCOffset,           (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_DWORD,  &m_dwHostCaptureToneDCOffset,               sizeof(DWORD) },
-        { NULL,   RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK, L"HostCaptureToneInitialPhase",     &m_dwHostCaptureToneInitialPhase,       (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_DWORD,  &m_dwHostCaptureToneInitialPhase,           sizeof(DWORD) },
-        { NULL,   0,                                                        NULL,                               NULL,                                   0,                                                              NULL,                                       0 }
-    };
-
-    RtlInitUnicodeString(&parametersPath, NULL);
-
-    // The sizeof(WCHAR) is added to the maximum length, for allowing a space for null termination of the string.
-    parametersPath.MaximumLength =
-        g_RegistryPath.Length + sizeof(L"\\Parameters") + sizeof(WCHAR);
-
-    parametersPath.Buffer = (PWCH)ExAllocatePool2(POOL_FLAG_PAGED, parametersPath.MaximumLength, MINWAVERT_POOLTAG);
-    if (parametersPath.Buffer == NULL)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlAppendUnicodeToString(&parametersPath, g_RegistryPath.Buffer);
-    RtlAppendUnicodeToString(&parametersPath, L"\\Parameters");
-
-    ntStatus = RtlQueryRegistryValues(
-        RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
-        parametersPath.Buffer,
-        &paramTable[0],
-        NULL,
-        NULL
-    );
-
-    ExFreePool(parametersPath.Buffer);
-
-    return ntStatus;
-}
-
 NTSTATUS
 CMiniportWaveRTStream::Init
 ( 
@@ -225,11 +178,6 @@ Return Value:
     m_SignalProcessingMode = SignalProcessingMode;
     m_bEoSReceived = FALSE;
     m_bLastBufferRendered = FALSE;
-
-    m_ulHostCaptureToneFrequency = IsEqualGUID(SignalProcessingMode, AUDIO_SIGNALPROCESSINGMODE_RAW) ? 1000 : 2000;
-    m_dwHostCaptureToneAmplitude = 50;
-    m_dwHostCaptureToneDCOffset = 0;
-    m_dwHostCaptureToneInitialPhase = 0;
 
     m_pPortStream = PortStream_;
     InitializeListHead(&m_NotificationList);
@@ -313,61 +261,7 @@ Return Value:
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    if (m_bCapture)
-    {
-        ReadRegistrySettings();
-        DWORD toneFrequency = 0;
-        DWORD toneAmplitude = 0;
-        DWORD toneDCOffset = 0;
-        DWORD toneInitialPhase = 0;
-
-        double toneAmplitudeDouble = 0;
-        double toneDCOffsetDouble = 0;
-        double toneInitialPhaseDouble = 0;
-
-        toneFrequency = m_ulHostCaptureToneFrequency;
-        toneAmplitude = m_dwHostCaptureToneAmplitude;
-        toneDCOffset = m_dwHostCaptureToneDCOffset;
-        toneInitialPhase = m_dwHostCaptureToneInitialPhase;
-
-        if (labs(toneAmplitude) > 100)
-        {
-            toneAmplitude = toneAmplitude > 0 ? 100 : -100;
-        }
-
-        if (labs(toneDCOffset) > 100)
-        {
-            toneDCOffset = toneDCOffset > 0 ? 100 : -100;
-        }
-
-        DWORD abssum = labs(toneAmplitude) + labs(toneDCOffset);
-
-        if (abssum > 100)
-        {
-            toneAmplitudeDouble = ((double)toneAmplitude) / abssum;
-            toneDCOffsetDouble = ((double)toneDCOffset) / abssum;
-        }
-        else
-        {
-            toneAmplitudeDouble = ((double)toneAmplitude) / 100.0;
-            toneDCOffsetDouble = ((double)toneDCOffset) / 100.0;
-        }
-
-        if (labs(toneInitialPhase) > 31416)
-        {
-            toneInitialPhase = toneInitialPhase > 0 ? 31416 : -31416;
-        }
-
-        toneInitialPhaseDouble = (double)toneInitialPhase / 10000;
-
-        ntStatus = m_ToneGenerator.Init(toneFrequency, toneAmplitudeDouble, toneDCOffsetDouble, toneInitialPhaseDouble, m_pWfExt);
-
-        if (!NT_SUCCESS(ntStatus))
-        {
-            return ntStatus;
-        }
-    }
-    else if (!g_DoNotCreateDataFiles)
+    if (!m_bCapture && !g_DoNotCreateDataFiles)
     {
         // TODO: maybe we should copy it instead ....
         PWAVEFORMATEX pwfx = NULL;

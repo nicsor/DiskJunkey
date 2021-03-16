@@ -247,7 +247,6 @@
   <ItemGroup>
     <ClCompile Include="hw.cpp" />
     <ClCompile Include="kshelper.cpp" />
-    <ClCompile Include="tonegenerator.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Inf Exclude="@(Inf)" Include="*.inf" />
@@ -260,7 +259,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hw.h" />
-    <ClInclude Include="ToneGenerator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
 </Project>

@@ -22,12 +22,6 @@
     <ClCompile Include="kshelper.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="savedata.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="ToneGenerator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="hw.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -39,16 +33,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="*.h;*.hpp;*.hxx;*.hm;*.inl;*.xsd">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="savedata.h">
+    <ClInclude Include="ToneGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="ToneGenerator.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="*.h;*.hpp;*.hxx;*.hm;*.inl;*.xsd">
+    <ClInclude Include="hw.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
