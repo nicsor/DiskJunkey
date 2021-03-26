@@ -309,6 +309,7 @@ Return Value:
 
         default:
             DPF(D_TERSE, ("[PropertyHandlerGeneric: Invalid Device Request]"));
+            break;
     }
 
     return ntStatus;

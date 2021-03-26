@@ -20,7 +20,7 @@ Abstract:-
 //
 #define MICARRAY_RAW_CHANNELS                   2       // Channels for raw mode
 #define MICARRAY_DEVICE_MAX_CHANNELS            2       // Max channels overall
-#define MICARRAY_32_BITS_PER_SAMPLE_PCM         32      // 32 Bits Per Sample
+#define MICARRAY_16_BITS_PER_SAMPLE_PCM         16      // 16 Bits Per Sample
 #define MICARRAY_RAW_SAMPLE_RATE                48000   // Raw sample rate
 
 //
@@ -48,12 +48,12 @@ KSDATAFORMAT_WAVEFORMATEXTENSIBLE MicArrayPinSupportedDeviceFormats[] =
                 WAVE_FORMAT_EXTENSIBLE,
                 2,
                 48000,
-                384000,
-                8,
-                32,
+                192000,
+                4,
+                16,
                 sizeof(WAVEFORMATEXTENSIBLE) - sizeof(WAVEFORMATEX)
             },
-            32,
+            16,
             KSAUDIO_SPEAKER_STEREO,
             STATICGUIDOF(KSDATAFORMAT_SUBTYPE_PCM)
         }
@@ -114,8 +114,8 @@ KSDATARANGE_AUDIO MicArrayPinDataRangesRawStream[] =
             STATICGUIDOF(KSDATAFORMAT_SPECIFIER_WAVEFORMATEX)
         },
         MICARRAY_RAW_CHANNELS,
-        MICARRAY_32_BITS_PER_SAMPLE_PCM,
-        MICARRAY_32_BITS_PER_SAMPLE_PCM,
+        MICARRAY_16_BITS_PER_SAMPLE_PCM,
+        MICARRAY_16_BITS_PER_SAMPLE_PCM,
         MICARRAY_RAW_SAMPLE_RATE,
         MICARRAY_RAW_SAMPLE_RATE
     },

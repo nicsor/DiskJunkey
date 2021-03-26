@@ -16,10 +16,13 @@
 # Mono auto generated files
 mono_crash.*
 
+[Dd]oxygen/
+
 # Build results
 [Dd]ebug/
 [Dd]ebugPublic/
 [Rr]elease/
+[Rr]elease Static/
 [Rr]eleases/
 x64/
 x86/

@@ -456,6 +456,7 @@
     <ClCompile Include="adapter.cpp" />
     <ClCompile Include="basetopo.cpp" />
     <ClCompile Include="common.cpp" />
+    <ClCompile Include="DataBuffer.cpp" />
     <ClCompile Include="mintopo.cpp" />
     <ClCompile Include="minwavert.cpp" />
     <ClCompile Include="minwavertstream.cpp" />

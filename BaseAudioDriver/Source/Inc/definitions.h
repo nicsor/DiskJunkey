@@ -169,6 +169,8 @@ extern DWORD g_DoNotCreateDataFiles;
 extern DWORD g_DisableBthScoBypass;
 extern UNICODE_STRING g_RegistryPath;
 
+extern BYTE g_SpeakerWaveFormat[128];
+
 //=============================================================================
 // Function prototypes
 //=============================================================================
