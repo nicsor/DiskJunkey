@@ -1,6 +1,12 @@
 # DiskJunkey
 Tweaking around with the Microsoft sysvad driver and interacting with it from a userspace app.
 
+To understand better what the code does, here's a video with the output of the initial implementation:
+
+   https://www.youtube.com/watch?v=_zj45Lj7was
+
+
+## References
 Initial driver sample code was taken from the Microsoft github repository. 
 https://github.com/microsoft/Windows-driver-samples/tree/master/audio/simpleaudiosample
 The license for the repository under that project was: The Microsoft Public License (MS-PL) and is copied in the dedicated resource folder.

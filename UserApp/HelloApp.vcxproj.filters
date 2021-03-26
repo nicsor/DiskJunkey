@@ -18,15 +18,21 @@
     <ClCompile Include="StdAfx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TrayMenu.cpp">
+    <ClCompile Include="HelloApp.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TrayMenuDlg.cpp">
+    <ClCompile Include="HelloAppDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Driver.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="DataFile.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="TrayMenu.rc">
+    <ResourceCompile Include="HelloApp.rc">
       <Filter>Source Files</Filter>
     </ResourceCompile>
   </ItemGroup>
@@ -34,10 +40,10 @@
     <None Include="res\menuimag.bmp">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\TrayMenu.ico">
+    <None Include="res\HelloApp.ico">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="res\TrayMenu.rc2">
+    <None Include="res\HelloApp.rc2">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
@@ -51,10 +57,16 @@
     <ClInclude Include="targetver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TrayMenu.h">
+    <ClInclude Include="HelloApp.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TrayMenuDlg.h">
+    <ClInclude Include="HelloAppDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Driver.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DataFile.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

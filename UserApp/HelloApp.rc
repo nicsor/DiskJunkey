@@ -1,4 +1,4 @@
-//Microsoft Developer Studio generated resource script.
+// Microsoft Visual C++ generated resource script.
 //
 #include "resource.h"
 
@@ -13,13 +13,11 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
-// English (U.S.) resources
+// English (United States) resources
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
-#ifdef _WIN32
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 #pragma code_page(1252)
-#endif //_WIN32
 
 #ifdef APSTUDIO_INVOKED
 /////////////////////////////////////////////////////////////////////////////
@@ -27,18 +25,18 @@ LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE 
 BEGIN
     "#include ""afxres.h""\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE 
 BEGIN
     "#define _AFX_NO_SPLITTER_RESOURCES\r\n"
     "#define _AFX_NO_OLE_RESOURCES\r\n"
@@ -50,7 +48,7 @@ BEGIN
     "LANGUAGE 9, 1\r\n"
     "#pragma code_page(1252)\r\n"
     "#endif //_WIN32\r\n"
-    "#include ""res\\TrayMenu.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
+    "#include ""res\\HelloApp.rc2""  // non-Microsoft Visual C++ edited resources\r\n"
     "#include ""afxres.rc""         // Standard components\r\n"
     "#if !defined(_AFXDLL)\r\n"
     "#include ""afxribbon.rc""      // ribbon and control bar resources\r\n"
@@ -69,27 +67,26 @@ END
 
 // Icon with lowest ID value placed first to ensure application icon
 // remains consistent on all systems.
-IDR_MAINFRAME           ICON    DISCARDABLE     "res\\TrayMenu.ico"
+IDR_MAINFRAME           ICON                    "res\\HelloApp.ico"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // Dialog
 //
 
-IDD_TRAYMENU_DIALOG DIALOGEX 0, 0, 320, 200
-STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-EXSTYLE WS_EX_APPWINDOW
-CAPTION "TrayMenu"
+IDD_HELLOAPP_DIALOG DIALOGEX 0, 0, 143, 88
+STYLE DS_SYSMODAL | DS_SETFONT | WS_VISIBLE
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,260,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,260,23,50,14
-    LTEXT           "This sample program illustrates the ability to use MFC Control Bar menus with the system tray icon.  To activate the tray menu, please click on the new tray icon with the right mouse button .",
-                    IDC_STATIC,48,61,200,59
+    DEFPUSHBUTTON   "Exit",IDOK,7,7,129,12
+    LTEXT           "Simple demo app.\nAll actions are implemented in the tray.",IDCANCEL,7,59,122,22
+    PUSHBUTTON      "Hide",IDC_HIDE,7,18,129,11
+    PUSHBUTTON      "Toggle record",IDC_TOGGLE_RECORD,7,29,129,13
+    PUSHBUTTON      "Toggle loop",IDC_TOGGLE_LOOP,7,42,129,12
 END
 
 
-#ifndef _MAC
 /////////////////////////////////////////////////////////////////////////////
 //
 // Version
@@ -112,15 +109,13 @@ BEGIN
     BEGIN
         BLOCK "040904B0"
         BEGIN
-            VALUE "CompanyName", "\0"
-            VALUE "FileDescription", "TrayMenu MFC Application\0"
-            VALUE "FileVersion", "1, 0, 0, 1\0"
-            VALUE "InternalName", "TrayMenu\0"
-            VALUE "LegalCopyright", "Copyright (C) 2001\0"
-            VALUE "LegalTrademarks", "\0"
-            VALUE "OriginalFilename", "TrayMenu.EXE\0"
-            VALUE "ProductName", "TrayMenu Application\0"
-            VALUE "ProductVersion", "1, 0, 0, 1\0"
+            VALUE "FileDescription", "Nicu's small sample application"
+            VALUE "FileVersion", "1, 0, 0, 1"
+            VALUE "InternalName", "Hello"
+            VALUE "LegalCopyright", "Copyright (C) 2021"
+            VALUE "OriginalFilename", "Hello.exe"
+            VALUE "ProductName", "Hello App"
+            VALUE "ProductVersion", "1, 0, 0, 1"
         END
     END
     BLOCK "VarFileInfo"
@@ -129,8 +124,6 @@ BEGIN
     END
 END
 
-#endif    // !_MAC
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -138,14 +131,14 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO
 BEGIN
-    IDD_TRAYMENU_DIALOG, DIALOG
+    IDD_HELLOAPP_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 313
+        RIGHTMARGIN, 136
         TOPMARGIN, 7
-        BOTTOMMARGIN, 193
+        BOTTOMMARGIN, 81
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -153,34 +146,10 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Menu
-//
-
-IDR_MENU1 MENU DISCARDABLE 
-BEGIN
-    POPUP "Tray"
-    BEGIN
-        MENUITEM "&Open....",                   ID_APP_OPEN
-        POPUP "&Items"
-        BEGIN
-            MENUITEM "Item &1",                     ID_ITEM1
-            MENUITEM "Item &2",                     ID_ITEM2
-            MENUITEM "Item &3",                     ID_ITEM3
-            MENUITEM "Item &4",                     ID_ITEM4
-        END
-        MENUITEM "&About....",                  ID_APP_ABOUT
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit",                       ID_APP_EXIT
-    END
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Toolbar
 //
 
-IDR_MENUIMAGES TOOLBAR DISCARDABLE  16, 16
+IDR_MENUIMAGES TOOLBAR 16, 16
 BEGIN
     BUTTON      ID_APP_ABOUT
     BUTTON      ID_APP_OPEN
@@ -194,24 +163,36 @@ END
 // Bitmap
 //
 
-IDR_MENUIMAGES          BITMAP  DISCARDABLE     "res\\menuimag.bmp"
+IDR_MENUIMAGES          BITMAP                  "res\\menuimag.bmp"
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_HELLOAPP_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE
 BEGIN
-    IDS_ABOUTBOX            "&About TrayMenu..."
+    IDS_ABOUTBOX            "&About HelloApp..."
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE
 BEGIN
-    AFX_IDS_APP_TITLE       "TrayMenu Sample"
+    AFX_IDS_APP_TITLE       "Nicu's small sample"
 END
 
-#endif    // English (U.S.) resources
+#endif    // English (United States) resources
 /////////////////////////////////////////////////////////////////////////////
 
 
@@ -231,10 +212,10 @@ END
 LANGUAGE 9, 1
 #pragma code_page(1252)
 #endif //_WIN32
-#include "res\TrayMenu.rc2"  // non-Microsoft Visual C++ edited resources
+#include "res\HelloApp.rc2"  // non-Microsoft Visual C++ edited resources
 #include "afxres.rc"         // Standard components
-#ifndef _AFXDLL
-#include "afxribbon.rc" // ribbon and control bar resources
+#if !defined(_AFXDLL)
+#include "afxribbon.rc"      // ribbon and control bar resources
 #endif
 #endif
 
