@@ -1,9 +1,10 @@
 # DiskJunkey
-Tweaking around with the Microsoft sysvad driver and interacting with it from a userspace app.
+Tweaking around with the Microsoft SysVad driver and interacting with it from a userspace app.
 
 To understand better what the code does, here's a video with the output of the initial implementation:
 
-   https://www.youtube.com/watch?v=_zj45Lj7was
+[<img src="https://img.youtube.com/vi/_zj45Lj7was/maxresdefault.jpg" width="50%">](https://youtu.be/_zj45Lj7was)
+
 
 
 ## References
